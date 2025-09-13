@@ -7,7 +7,10 @@ defmodule ElixirProto.MixProject do
       version: "0.1.0",
       elixir: "~> 1.18",
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      ## co-located tests
+      test_paths: ["test", "lib"],
+      test_pattern: "*_test.exs"
     ]
   end
 
