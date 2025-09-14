@@ -8,10 +8,12 @@ defmodule ElixirProto.Schema do
 
   defmacro __using__(opts) do
     name = Keyword.fetch!(opts, :name)
+    index = Keyword.get(opts, :index)  # Optional explicit index
 
     quote do
       import ElixirProto.Schema, only: [defschema: 2]
       @schema_name unquote(name)
+      @schema_index unquote(index)
     end
   end
 
@@ -45,6 +47,11 @@ defmodule ElixirProto.Schema do
         |> Enum.with_index(1)
         |> Map.new(fn {field, index} -> {index, field} end)
       end
+
+      # Add schema index function if explicit index provided
+      if @schema_index do
+        def __schema_index__(), do: @schema_index
+      end
     end
   end
 end
@@ -68,16 +75,57 @@ defmodule ElixirProto.Schema.Registry do
       field_indices = module.__schema__(:field_indices)
       index_fields = module.__schema__(:index_fields)
 
-      registry = get_registry()
+      # Check if module has explicit schema index
+      explicit_index = case function_exported?(module, :__schema_index__, 0) do
+        true -> module.__schema_index__()
+        false -> nil
+      end
 
+      # Register schema in main registry
+      registry = get_registry()
       new_registry = Map.put(registry, schema_name, %{
         module: module,
         fields: fields,
         field_indices: field_indices,
         index_fields: index_fields
       })
-
       :persistent_term.put(@registry_key, new_registry)
+
+      # Register schema index with conflict detection
+      if explicit_index do
+        register_explicit_index(schema_name, explicit_index)
+      else
+        # Let SchemaRegistry assign the next available index
+        ElixirProto.SchemaRegistry.get_or_create_index(schema_name)
+      end
+    end
+  end
+
+  defp register_explicit_index(schema_name, explicit_index) do
+    alias ElixirProto.SchemaRegistry
+
+    # Check if index is already taken
+    existing_name = SchemaRegistry.get_name(explicit_index)
+
+    cond do
+      existing_name == nil ->
+        # Index is available, register it
+        # First check if schema already has a different index
+        current_index = SchemaRegistry.get_index(schema_name)
+        if current_index && current_index != explicit_index do
+          raise CompileError, description: "Schema '#{schema_name}' is already registered with index #{current_index}, cannot reassign to #{explicit_index}"
+        end
+
+        # Force registration with specific index
+        SchemaRegistry.force_register_index(schema_name, explicit_index)
+
+      existing_name == schema_name ->
+        # Same schema, same index - OK
+        :ok
+
+      true ->
+        # Index conflict
+        raise CompileError, description: "Schema index #{explicit_index} is already assigned to '#{existing_name}', cannot assign to '#{schema_name}'"
     end
   end
 

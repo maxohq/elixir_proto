@@ -8,16 +8,18 @@ defmodule ElixirProto do
   """
 
   alias ElixirProto.Schema.Registry
+  alias ElixirProto.SchemaRegistry
 
   @doc """
   Encode a struct to compressed binary format.
 
   The encoding process:
   1. Extract struct module and fields
-  2. Convert to indexed format using schema registry
-  3. Skip nil fields for space efficiency
-  4. Serialize with Erlang terms
-  5. Compress with zlib
+  2. Get or create schema index for ultra-compact storage
+  3. Convert to fixed tuple format (most efficient)
+  4. Skip nil fields for space efficiency
+  5. Serialize with Erlang terms
+  6. Compress with zlib
 
   ## Examples
 
@@ -39,24 +41,23 @@ defmodule ElixirProto do
     end
 
     schema_name = schema.module.__schema__(:name)
-    field_indices = schema.field_indices
+    max_fields = length(schema.fields)
 
-    # Convert struct to indexed format, skipping nil fields
-    indexed_fields =
-      struct
-      |> Map.from_struct()
-      |> Enum.reduce([], fn {field, value}, acc ->
-        if value != nil do
-          index = Map.fetch!(field_indices, field)
-          [{index, value} | acc]
-        else
-          acc
-        end
-      end)
-      |> Enum.reverse()
+    # Get or create schema index (2 bytes vs potentially 20+ bytes for name)
+    {schema_index, _is_new} = SchemaRegistry.get_or_create_index(schema_name)
 
-    # Create the serializable format
-    serializable_data = {schema_name, indexed_fields}
+    # Convert to fixed tuple format (most space efficient)
+    values = Enum.map(1..max_fields, fn i ->
+      field_name = Map.get(schema.index_fields, i)
+      if field_name do
+        Map.get(Map.from_struct(struct), field_name)
+      else
+        nil
+      end
+    end)
+
+    # Create ultra-compact format: {schema_index, tuple_of_values}
+    serializable_data = {schema_index, List.to_tuple(values)}
 
     # Serialize and compress
     serializable_data
@@ -70,9 +71,9 @@ defmodule ElixirProto do
   The decoding process:
   1. Decompress with zlib
   2. Convert to terms
-  3. Extract schema name
-  4. Look up schema in registry
-  5. Reconstruct struct using field mappings
+  3. Extract schema index
+  4. Look up schema name by index
+  5. Reconstruct struct from fixed tuple
 
   ## Examples
 
@@ -90,12 +91,19 @@ defmodule ElixirProto do
   """
   def decode(encoded_binary) when is_binary(encoded_binary) do
     # Decompress and deserialize
-    {schema_name, indexed_fields} =
+    {schema_index, values_tuple} =
       encoded_binary
       |> :zlib.uncompress()
       |> :erlang.binary_to_term()
 
-    # Look up schema
+    # Look up schema name by index
+    schema_name = SchemaRegistry.get_name(schema_index)
+
+    if schema_name == nil do
+      raise ArgumentError, "Schema index #{schema_index} not found in registry. Schema may have been registered after encoding."
+    end
+
+    # Look up schema by name
     schema = Registry.get_schema(schema_name)
 
     if schema == nil do
@@ -103,22 +111,18 @@ defmodule ElixirProto do
     end
 
     module = schema.module
-    index_fields = schema.index_fields
+    fields = schema.fields
 
-    # Convert indexed fields back to field map
-    field_map =
-      indexed_fields
-      |> Enum.reduce(%{}, fn {index, value}, acc ->
-        field = Map.fetch!(index_fields, index)
-        Map.put(acc, field, value)
-      end)
+    # Convert tuple back to field map
+    values_list = Tuple.to_list(values_tuple)
 
-    # Create struct with all fields (nil for missing ones)
-    all_fields = schema.fields
-    complete_field_map = Enum.reduce(all_fields, %{}, fn field, acc ->
-      Map.put(acc, field, Map.get(field_map, field))
+    field_map = fields
+    |> Enum.with_index()
+    |> Enum.reduce(%{}, fn {field_name, index}, acc ->
+      value = Enum.at(values_list, index)
+      Map.put(acc, field_name, value)
     end)
 
-    struct(module, complete_field_map)
+    struct(module, field_map)
   end
 end

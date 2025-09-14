@@ -7,3 +7,7 @@
 - You will find a creative solution for the schema registry. 
     - There should be no gen servers. 
     - And when I reboot the application without any gen servers, I should be still able to properly serialize and deserialize my structs.
+
+
+### Important
+Avoid emojis!

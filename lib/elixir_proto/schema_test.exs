@@ -1,14 +1,20 @@
 defmodule ElixirProto.Schema.Test do
   use ExUnit.Case, async: false
 
+  setup do
+    # Reset registry for clean tests
+    ElixirProto.SchemaRegistry.reset!()
+    :ok
+  end
+
   describe "defschema macro" do
     defmodule TestUser do
-      use ElixirProto.Schema, name: "test.user"
+      use ElixirProto.Schema, name: "test.user", index: 10
       defschema TestUser, [:id, :name, :email, :age, :active]
     end
 
     defmodule TestPost do
-      use ElixirProto.Schema, name: "test.post"
+      use ElixirProto.Schema, name: "test.post", index: 11
       defschema TestPost, [:id, :title, :content, :author_id, :created_at]
     end
 

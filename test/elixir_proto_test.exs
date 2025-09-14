@@ -1,14 +1,20 @@
 defmodule ElixirProtoTest do
   use ExUnit.Case, async: false
 
+  setup do
+    # Reset registry for clean tests
+    ElixirProto.SchemaRegistry.reset!()
+    :ok
+  end
+
   # Test schemas
   defmodule User do
-    use ElixirProto.Schema, name: "myapp.ctx.user"
+    use ElixirProto.Schema, name: "myapp.ctx.user", index: 1
     defschema User, [:id, :name, :email, :age, :active]
   end
 
   defmodule Post do
-    use ElixirProto.Schema, name: "myapp.ctx.post"
+    use ElixirProto.Schema, name: "myapp.ctx.post", index: 2
     defschema Post, [:id, :title, :content, :author_id, :created_at]
   end
 
@@ -86,11 +92,11 @@ defmodule ElixirProtoTest do
     end
 
     test "raises error for unknown schema in encoded data" do
-      # Manually create encoded data with unknown schema
-      fake_data = {"unknown.schema", [{1, "test"}]}
+      # Manually create encoded data with unknown schema index
+      fake_data = {999, {"test"}}  # Use invalid schema index
       encoded = fake_data |> :erlang.term_to_binary() |> :zlib.compress()
 
-      assert_raise ArgumentError, ~r/Schema 'unknown.schema' not found/, fn ->
+      assert_raise ArgumentError, ~r/Schema index 999 not found/, fn ->
         ElixirProto.decode(encoded)
       end
     end
