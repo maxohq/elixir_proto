@@ -21,3 +21,7 @@ elixir_proto-*.tar
 
 # Temporary files, for example, from tests.
 /tmp/
+
+
+@pm/
+.claude/
