@@ -92,24 +92,6 @@ defmodule ElixirProto.SchemaRegistryTest do
     end
   end
 
-  describe "initialize_with_mappings/1" do
-    test "initializes registry with predefined mappings" do
-      mappings = %{"user.schema" => 5, "post.schema" => 10}
-
-      assert SchemaRegistry.initialize_with_mappings(mappings) == :ok
-      assert SchemaRegistry.get_index("user.schema") == 5
-      assert SchemaRegistry.get_index("post.schema") == 10
-
-      stats = SchemaRegistry.stats()
-      assert stats.next_available_id == 11
-    end
-
-    test "rejects invalid mappings" do
-      invalid_mappings = %{"user.schema" => 0, "post.schema" => "invalid"}
-
-      assert SchemaRegistry.initialize_with_mappings(invalid_mappings) == {:error, :invalid_mappings}
-    end
-  end
 
   describe "export_registry/0 and import_registry/1" do
     test "exports and imports registry data" do

@@ -69,21 +69,6 @@ defmodule ElixirProto.SchemaRegistry do
     :persistent_term.get(@next_id_key, 1)
   end
 
-  @doc """
-  Initialize registry with pre-defined stable mappings.
-  Useful for maintaining backward compatibility.
-  """
-  def initialize_with_mappings(mappings) when is_map(mappings) do
-    # Validate all values are positive integers
-    if Enum.all?(mappings, fn {_name, id} -> is_integer(id) and id > 0 end) do
-      max_id = mappings |> Map.values() |> Enum.max(fn -> 0 end)
-      :persistent_term.put(@registry_key, mappings)
-      :persistent_term.put(@next_id_key, max_id + 1)
-      :ok
-    else
-      {:error, :invalid_mappings}
-    end
-  end
 
   @doc """
   Export current registry for backup/migration

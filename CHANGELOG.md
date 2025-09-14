@@ -4,6 +4,7 @@
 
 ### Breaking Changes
 - Removed `SchemaRegistry.get_or_create_index/1` function - all schema indices must be explicitly assigned
+- Removed `SchemaRegistry.initialize_with_mappings/1` function - schemas auto-register during compilation
 - Schema registration now strictly requires explicit index parameter - automatic index assignment removed
 - `ElixirProto.encode/1` now uses read-only `get_index/1` instead of `get_or_create_index/1`
 

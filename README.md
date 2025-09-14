@@ -107,11 +107,16 @@ ElixirProto.SchemaRegistry.stats()
 # Export registry for backup
 backup = ElixirProto.SchemaRegistry.export_registry()
 
-# Initialize registry with predefined mappings
-ElixirProto.SchemaRegistry.initialize_with_mappings(%{
-  "stable.user" => 1,
-  "stable.post" => 2
-})
+# Import registry from backup
+ElixirProto.SchemaRegistry.import_registry(backup)
+
+# Get specific schema index
+ElixirProto.SchemaRegistry.get_index("myapp.ctx.user")
+# => 1
+
+# Get schema name by index
+ElixirProto.SchemaRegistry.get_name(1)
+# => "myapp.ctx.user"
 ```
 
 ## Implementation Architecture
@@ -126,7 +131,7 @@ ElixirProto.SchemaRegistry.initialize_with_mappings(%{
 2. **ElixirProto.SchemaRegistry** - Index management system:
    - Maps schema names to numeric indices
    - Provides persistent storage using `:persistent_term`
-   - Supports explicit index assignment and auto-increment
+   - Supports explicit index assignment with conflict detection
    - Enables registry export/import for backup and migration
 
 3. **ElixirProto** - Main API module with:
