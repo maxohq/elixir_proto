@@ -229,14 +229,18 @@ defmodule ElixirProto.TypedSchema do
         """
     end
 
-    # Determine if field should be enforced
+    # Determine if field should be enforced (defaults to false - opt-in only)
     enforce_by_default = Module.get_attribute(module, :ts_enforce_by_default) || false
     has_default = Keyword.has_key?(opts, :default)
 
     enforce =
       case opts[:enforce] do
-        nil -> enforce_by_default && !has_default
-        explicit -> !!explicit
+        nil ->
+          # Only enforce if explicitly requested at schema level AND no default provided
+          enforce_by_default && !has_default
+
+        explicit ->
+          !!explicit
       end
 
     # Store field definition

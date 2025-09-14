@@ -18,7 +18,7 @@ ElixirProto combines the robustness of Erlang's term serialization with space-ef
 1. **Schema Index Registry**: Maps schema names to small numeric indices (1-3 bytes vs potentially 20+ bytes for names)
 2. **Fixed Tuple Format**: Stores field values in a fixed tuple structure, eliminating per-field indexing overhead
 
-This approach provides significant space savings while maintaining full type safety and schema evolution capabilities.
+This approach provides significant space savings while maintaining full type safety and schema evolution capabilities. The library offers two schema definition approaches: the basic `Schema` for simple use cases, and the advanced `TypedSchema` for enhanced type safety and developer tooling integration.
 
 ## How It Works
 
@@ -117,6 +117,143 @@ ElixirProto.SchemaRegistry.get_index("myapp.ctx.user")
 # Get schema name by index
 ElixirProto.SchemaRegistry.get_name(1)
 # => "myapp.ctx.user"
+```
+
+## TypedSchema - Enhanced Type Safety
+
+ElixirProto provides `TypedSchema` for applications requiring enhanced type safety, explicit field control, and better developer tooling integration. TypedSchema generates identical serialization format to regular Schema while adding Dialyzer-compatible type specifications and explicit field indices.
+
+### Basic TypedSchema Usage
+
+```elixir
+defmodule User do
+  use ElixirProto.TypedSchema, name: "myapp.user", index: 1
+
+  typedschema do
+    field :id, pos_integer(), index: 1, enforce: true      # Explicitly required
+    field :name, String.t(), index: 2, enforce: true       # Explicitly required
+    field :email, String.t() | nil, index: 3               # Optional (default behavior)
+    field :age, pos_integer(), index: 4, default: 0        # Optional with default
+  end
+end
+```
+
+This generates:
+- A struct with optional fields by default: `%User{id: <required>, name: <required>, email: nil, age: 0}`
+- Type specification: `@type t() :: %__MODULE__{id: pos_integer(), name: String.t(), email: String.t() | nil, age: pos_integer()}`
+- Field index mapping for deterministic serialization order
+- Full compatibility with `ElixirProto.encode/1` and `ElixirProto.decode/1`
+
+**Note**: Following protobuf conventions, all fields are optional by default. Use `enforce: true` only when explicitly needed.
+
+### TypedSchema Features
+
+**Explicit Field Indices**: Fields must specify explicit indices, ensuring deterministic serialization order and safer schema evolution.
+
+```elixir
+typedschema do
+  field :priority_field, String.t(), index: 1  # Always serialized first (optional)
+  field :secondary_field, String.t(), index: 5  # Always serialized last (optional)
+  field :middle_field, String.t(), index: 3   # Definition order doesn't matter (optional)
+end
+```
+
+**Type Specifications**: Automatically generates `@type t()` for Dialyzer integration and IDE support.
+
+```elixir
+# All fields are optional by default and become nullable automatically
+field :optional_field, String.t(), index: 2  # Type becomes String.t() | nil (default)
+
+# Only explicitly enforced fields keep their original type
+field :required_field, String.t(), index: 3, enforce: true  # Type stays String.t()
+```
+
+**Field Enforcement and Defaults**: Fine-grained control over optional/required fields and default values.
+
+```elixir
+# All fields optional by default (protobuf-style)
+typedschema do
+  field :id, pos_integer(), index: 1                    # Optional
+  field :name, String.t(), index: 2                     # Optional
+  field :email, String.t(), index: 3, default: "none"   # Optional with default
+end
+
+# Global enforcement (opt-in when needed)
+typedschema enforce: true do
+  field :id, pos_integer(), index: 1            # Enforced (global setting)
+  field :name, String.t(), index: 2             # Enforced (global setting)
+  field :email, String.t(), index: 3, enforce: false  # Override: not enforced
+  field :created_at, DateTime.t(), index: 4, default: &DateTime.utc_now/0  # Optional with function default
+end
+```
+
+**Function Defaults**: Support for function references as defaults without evaluation during struct creation.
+
+```elixir
+field :timestamp, DateTime.t(), index: 1, default: &DateTime.utc_now/0
+field :uuid, String.t(), index: 2, default: &Ecto.UUID.generate/0
+
+# Functions preserved without evaluation:
+user = %User{}  # user.timestamp is still &DateTime.utc_now/0, not a DateTime
+```
+
+### TypedSchema vs Schema Comparison
+
+| Feature | Schema | TypedSchema |
+|---------|--------|-------------|
+| **Definition** | `defschema [:id, :name]` | `field :id, pos_integer(), index: 1` |
+| **Type Safety** | No type information | Full Dialyzer integration |
+| **Field Order** | Definition order | Explicit index order |
+| **IDE Support** | Basic struct completion | Rich type hints and validation |
+| **Field Enforcement** | Manual `@enforce_keys` | Optional by default, `enforce: true` to require |
+| **Default Behavior** | All fields nil by default | All fields optional and nullable by default |
+| **Serialization** | Identical format | Identical format |
+| **Performance** | Baseline | Equivalent runtime performance |
+
+### Developer Experience Benefits
+
+**Static Analysis**: TypedSchema integrates with Dialyzer to catch type errors during compilation.
+
+```elixir
+def process_user(%User{} = user) do
+  # Dialyzer knows user.id is pos_integer(), user.email is String.t() | nil
+  if user.age > 18, do: :adult, else: :minor
+end
+```
+
+**IDE Integration**: Rich autocompletion and inline documentation through type specifications.
+
+**Schema Evolution**: Explicit indices enable safer field reordering without breaking serialization compatibility.
+
+```elixir
+# Safe evolution - reorder fields by changing indices (all optional by default)
+typedschema do
+  field :name, String.t(), index: 1      # Was index: 2, moved up (optional)
+  field :id, pos_integer(), index: 2     # Was index: 1, moved down (optional)
+  field :email, String.t(), index: 3     # Unchanged (optional)
+end
+```
+
+**Migration Compatibility**: TypedSchema and Schema modules are fully interoperable within the same application.
+
+```elixir
+# Mix both approaches in the same application
+defmodule LegacyUser do
+  use ElixirProto.Schema, name: "myapp.user.legacy", index: 1
+  defschema [:id, :name]
+end
+
+defmodule ModernUser do
+  use ElixirProto.TypedSchema, name: "myapp.user.modern", index: 2
+  typedschema do
+    field :id, pos_integer(), index: 1    # Optional by default
+    field :name, String.t(), index: 2     # Optional by default
+  end
+end
+
+# Both serialize to the same ElixirProto format
+ElixirProto.encode(%LegacyUser{id: 1, name: "Alice"})   # Works
+ElixirProto.encode(%ModernUser{id: 1, name: "Alice"})   # Works
 ```
 
 ## Nested Struct Serialization
@@ -309,7 +446,9 @@ Benchmark results comparing ElixirProto against plain Elixir term serialization 
 
 ## Schema Evolution
 
-The explicit index system enables controlled schema evolution:
+The explicit index system enables controlled schema evolution. TypedSchema provides enhanced safety through explicit field indices, while basic Schema uses positional field ordering.
+
+### Basic Schema Evolution
 
 ```elixir
 # V1 Schema
@@ -331,11 +470,55 @@ defmodule User do
 end
 ```
 
+### TypedSchema Evolution (Recommended)
+
+TypedSchema's explicit field indices provide safer evolution with more flexibility:
+
+```elixir
+# V1 TypedSchema (protobuf-style: all optional by default)
+defmodule User do
+  use ElixirProto.TypedSchema, name: "myapp.ctx.user", index: 1
+
+  typedschema do
+    field :id, pos_integer(), index: 1      # Optional
+    field :name, String.t(), index: 2       # Optional
+    field :email, String.t(), index: 3      # Optional
+  end
+end
+
+# V2 - Safe field reordering and addition
+defmodule User do
+  use ElixirProto.TypedSchema, name: "myapp.ctx.user", index: 1
+
+  typedschema do
+    field :id, pos_integer(), index: 1                   # Optional
+    field :full_name, String.t(), index: 2               # Renamed, optional
+    field :age, pos_integer(), index: 4                  # New field, optional
+    field :email, String.t(), index: 3                   # Reordered in definition, optional
+  end
+end
+
+# V3 - Advanced evolution with defaults and selective enforcement
+defmodule User do
+  use ElixirProto.TypedSchema, name: "myapp.ctx.user", index: 1
+
+  typedschema do
+    field :id, pos_integer(), index: 1, enforce: true    # Explicitly required
+    field :full_name, String.t(), index: 2               # Optional
+    field :email, String.t(), index: 3, default: "no-email@example.com"  # Optional with default
+    field :age, pos_integer(), index: 4, default: 0      # Optional with default
+    field :status, atom(), index: 5, default: :active    # Optional with default
+  end
+end
+```
+
 **Compatibility Rules:**
 - Schema index must remain constant for backward compatibility
-- New fields should be appended (not inserted) to maintain position mapping
-- Field renames are safe as only positions matter
+- **Basic Schema**: New fields must be appended to maintain position mapping
+- **TypedSchema**: Fields can be added at any explicit index, enabling flexible evolution
+- Field renames are safe as only indices matter for serialization
 - Field removal requires careful consideration of data migration
+- **TypedSchema** provides compile-time validation of index conflicts
 
 ### Type Safety
 - Leverages Erlang's robust term serialization
@@ -361,11 +544,19 @@ ElixirProto is particularly effective for:
 - Applications requiring schema evolution without breaking changes
 - Systems serializing many instances of the same struct types
 
+**TypedSchema recommended when:**
+- Type safety and Dialyzer integration are priorities
+- Team uses IDEs with advanced Elixir tooling
+- Schema evolution flexibility is required
+- Explicit field ordering control is needed
+- Application has complex domain models with many fields
+
 **Consider alternatives when:**
 - Serializing mixed data types without consistent structure
 - One-off serialization tasks where setup overhead isn't justified
 - Very small structs (1-2 short fields) where overhead dominates
 - Applications prioritizing encoding speed over payload size
+- Simple prototypes where basic Schema suffices
 
 ## Installation
 
