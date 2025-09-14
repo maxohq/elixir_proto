@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.5] - 2025-09-14
+
+### Changed
+- **Schema Registry Refactoring**: Renamed `Schema.Registry` module to `SchemaRegistry` for better consistency
+- **Schema Name Registry**: Renamed `ElixirProto.SchemaRegistry` to `ElixirProto.SchemaNameRegistry` for clearer naming
+- **Test Organization**: Extracted and reorganized test files for better maintainability
+- **Documentation Improvements**: Enhanced documentation files and simplified README structure
+
+### Internal
+- Updated benchmarks and examples to use new module names
+- Improved code organization and test structure
+- Better module naming consistency across the codebase
+
 ## [0.1.4] - 2025-09-14
 
 ### Added
