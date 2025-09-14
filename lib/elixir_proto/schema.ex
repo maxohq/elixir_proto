@@ -91,12 +91,11 @@ defmodule ElixirProto.Schema.Registry do
       })
       :persistent_term.put(@registry_key, new_registry)
 
-      # Register schema index with conflict detection
+      # Register schema index - explicit index is required
       if explicit_index do
         register_explicit_index(schema_name, explicit_index)
       else
-        # Let SchemaRegistry assign the next available index
-        ElixirProto.SchemaRegistry.get_or_create_index(schema_name)
+        raise CompileError, description: "Schema '#{schema_name}' must have an explicit index parameter. Use: use ElixirProto.Schema, name: \"#{schema_name}\", index: <number>"
       end
     end
   end

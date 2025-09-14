@@ -9,26 +9,6 @@ defmodule ElixirProto.SchemaRegistry do
   @registry_key {__MODULE__, :schema_index}
   @next_id_key {__MODULE__, :next_id}
 
-  @doc """
-  Get or assign a stable index for a schema name.
-  Returns {schema_index, is_new_registration}
-  """
-  def get_or_create_index(schema_name) when is_binary(schema_name) do
-    registry = get_registry()
-
-    case Map.get(registry, schema_name) do
-      nil ->
-        # New schema - assign next available index
-        next_id = get_next_id()
-        new_registry = Map.put(registry, schema_name, next_id)
-        :persistent_term.put(@registry_key, new_registry)
-        :persistent_term.put(@next_id_key, next_id + 1)
-        {next_id, true}
-
-      existing_id ->
-        {existing_id, false}
-    end
-  end
 
   @doc """
   Get schema index by name (returns nil if not found)

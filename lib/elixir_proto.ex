@@ -15,7 +15,7 @@ defmodule ElixirProto do
 
   The encoding process:
   1. Extract struct module and fields
-  2. Get or create schema index for ultra-compact storage
+  2. Get pre-registered schema index for ultra-compact storage
   3. Convert to fixed tuple format (most efficient)
   4. Skip nil fields for space efficiency
   5. Serialize with Erlang terms
@@ -43,8 +43,12 @@ defmodule ElixirProto do
     schema_name = schema.module.__schema__(:name)
     max_fields = length(schema.fields)
 
-    # Get or create schema index (2 bytes vs potentially 20+ bytes for name)
-    {schema_index, _is_new} = SchemaRegistry.get_or_create_index(schema_name)
+    # Get schema index (must be pre-registered)
+    schema_index = SchemaRegistry.get_index(schema_name)
+
+    if schema_index == nil do
+      raise ArgumentError, "Schema index not found for '#{schema_name}'. Make sure the schema is registered with an explicit index."
+    end
 
     # Convert to fixed tuple format (most space efficient)
     values = Enum.map(1..max_fields, fn i ->
