@@ -37,7 +37,8 @@ defmodule ElixirProto do
     schema = Registry.get_schema_by_module(module)
 
     if schema == nil do
-      raise ArgumentError, "Schema not found for module #{inspect(module)}. Make sure the module uses ElixirProto.Schema."
+      raise ArgumentError,
+            "Schema not found for module #{inspect(module)}. Make sure the module uses ElixirProto.Schema."
     end
 
     schema_name = schema.module.__schema__(:name)
@@ -47,19 +48,22 @@ defmodule ElixirProto do
     schema_index = SchemaRegistry.get_index(schema_name)
 
     if schema_index == nil do
-      raise ArgumentError, "Schema index not found for '#{schema_name}'. Make sure the schema is registered with an explicit index."
+      raise ArgumentError,
+            "Schema index not found for '#{schema_name}'. Make sure the schema is registered with an explicit index."
     end
 
     # Convert to fixed tuple format with nested struct support
-    values = Enum.map(1..max_fields, fn i ->
-      field_name = Map.get(schema.index_fields, i)
-      if field_name do
-        field_value = Map.get(Map.from_struct(struct), field_name)
-        encode_field_value(field_value)
-      else
-        nil
-      end
-    end)
+    values =
+      Enum.map(1..max_fields, fn i ->
+        field_name = Map.get(schema.index_fields, i)
+
+        if field_name do
+          field_value = Map.get(Map.from_struct(struct), field_name)
+          encode_field_value(field_value)
+        else
+          nil
+        end
+      end)
 
     # Create ultra-compact format: {schema_index, tuple_of_values}
     serializable_data = {schema_index, List.to_tuple(values)}
@@ -105,14 +109,16 @@ defmodule ElixirProto do
     schema_name = SchemaRegistry.get_name(schema_index)
 
     if schema_name == nil do
-      raise ArgumentError, "Schema index #{schema_index} not found in registry. Schema may have been registered after encoding."
+      raise ArgumentError,
+            "Schema index #{schema_index} not found in registry. Schema may have been registered after encoding."
     end
 
     # Look up schema by name
     schema = Registry.get_schema(schema_name)
 
     if schema == nil do
-      raise ArgumentError, "Schema '#{schema_name}' not found in registry. Make sure all required modules are loaded."
+      raise ArgumentError,
+            "Schema '#{schema_name}' not found in registry. Make sure all required modules are loaded."
     end
 
     module = schema.module
@@ -121,13 +127,15 @@ defmodule ElixirProto do
     # Convert tuple back to field map
     values_list = Tuple.to_list(values_tuple)
 
-    field_map = fields
-    |> Enum.with_index()
-    |> Enum.reduce(%{}, fn {field_name, index}, acc ->
-      value = Enum.at(values_list, index)
-      decoded_value = decode_field_value(value)  # Handle nested structs
-      Map.put(acc, field_name, decoded_value)
-    end)
+    field_map =
+      fields
+      |> Enum.with_index()
+      |> Enum.reduce(%{}, fn {field_name, index}, acc ->
+        value = Enum.at(values_list, index)
+        # Handle nested structs
+        decoded_value = decode_field_value(value)
+        Map.put(acc, field_name, decoded_value)
+      end)
 
     struct(module, field_map)
   end
@@ -151,15 +159,19 @@ defmodule ElixirProto do
         else
           # Encode nested struct values recursively
           max_fields = length(schema.fields)
-          nested_values = Enum.map(1..max_fields, fn i ->
-            field_name = Map.get(schema.index_fields, i)
-            if field_name do
-              field_value = Map.get(Map.from_struct(nested_struct), field_name)
-              encode_field_value(field_value)  # Recursive for deeper nesting
-            else
-              nil
-            end
-          end)
+
+          nested_values =
+            Enum.map(1..max_fields, fn i ->
+              field_name = Map.get(schema.index_fields, i)
+
+              if field_name do
+                field_value = Map.get(Map.from_struct(nested_struct), field_name)
+                # Recursive for deeper nesting
+                encode_field_value(field_value)
+              else
+                nil
+              end
+            end)
 
           # Return nested format: {:ep, schema_index, values_tuple}
           {:ep, nested_schema_index, List.to_tuple(nested_values)}
@@ -190,13 +202,16 @@ defmodule ElixirProto do
 
             # Convert tuple back to field map, recursively decoding nested values
             values_list = Tuple.to_list(values_tuple)
-            field_map = fields
-            |> Enum.with_index()
-            |> Enum.reduce(%{}, fn {field_name, index}, acc ->
-              value = Enum.at(values_list, index)
-              decoded_value = decode_field_value(value)  # Recursive for deeper nesting
-              Map.put(acc, field_name, decoded_value)
-            end)
+
+            field_map =
+              fields
+              |> Enum.with_index()
+              |> Enum.reduce(%{}, fn {field_name, index}, acc ->
+                value = Enum.at(values_list, index)
+                # Recursive for deeper nesting
+                decoded_value = decode_field_value(value)
+                Map.put(acc, field_name, decoded_value)
+              end)
 
             struct(module, field_map)
         end

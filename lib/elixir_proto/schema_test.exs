@@ -33,12 +33,12 @@ defmodule ElixirProto.Schema.Test do
   describe "defschema macro" do
     defmodule TestUser do
       use ElixirProto.Schema, name: "test.user", index: 10
-      defschema [:id, :name, :email, :age, :active]
+      defschema([:id, :name, :email, :age, :active])
     end
 
     defmodule TestPost do
       use ElixirProto.Schema, name: "test.post", index: 11
-      defschema [:id, :title, :content, :author_id, :created_at]
+      defschema([:id, :title, :content, :author_id, :created_at])
     end
 
     test "creates struct with nil defaults" do

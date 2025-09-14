@@ -33,12 +33,12 @@ defmodule ElixirProtoTest do
   # Test schemas
   defmodule User do
     use ElixirProto.Schema, name: "myapp.ctx.user", index: 1
-    defschema [:id, :name, :email, :age, :active]
+    defschema([:id, :name, :email, :age, :active])
   end
 
   defmodule Post do
     use ElixirProto.Schema, name: "myapp.ctx.post", index: 2
-    defschema [:id, :title, :content, :author_id, :created_at]
+    defschema([:id, :title, :content, :author_id, :created_at])
   end
 
   # Regular struct without ElixirProto schema (for testing error cases)
@@ -116,7 +116,8 @@ defmodule ElixirProtoTest do
 
     test "raises error for unknown schema in encoded data" do
       # Manually create encoded data with unknown schema index
-      fake_data = {999, {"test"}}  # Use invalid schema index
+      # Use invalid schema index
+      fake_data = {999, {"test"}}
       encoded = fake_data |> :erlang.term_to_binary() |> :zlib.compress()
 
       assert_raise ArgumentError, ~r/Schema index 999 not found/, fn ->
@@ -190,11 +191,13 @@ defmodule ElixirProtoTest do
 
       # ElixirProto should be reasonably sized (compression helps)
       assert byte_size(proto_encoded) > 0
-      assert byte_size(raw_encoded) > 0  # Just ensure both work
+      # Just ensure both work
+      assert byte_size(raw_encoded) > 0
     end
 
     test "nil field omission saves space" do
-      user_with_nils = %User{id: 1, name: "Alice"}  # email, age, active are nil
+      # email, age, active are nil
+      user_with_nils = %User{id: 1, name: "Alice"}
       user_without_nils = %User{id: 1, name: "Alice", email: "", age: 0, active: false}
 
       encoded_with_nils = ElixirProto.encode(user_with_nils)
@@ -227,7 +230,8 @@ defmodule ElixirProtoTest do
       assert decoded.active == true
 
       # Demonstrate space efficiency with nil omission
-      user_partial = %User{id: 1, name: "Alice"}  # Only id and name set
+      # Only id and name set
+      user_partial = %User{id: 1, name: "Alice"}
       encoded_partial = ElixirProto.encode(user_partial)
       decoded_partial = ElixirProto.decode(encoded_partial)
 

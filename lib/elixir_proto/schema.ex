@@ -8,7 +8,8 @@ defmodule ElixirProto.Schema do
 
   defmacro __using__(opts) do
     name = Keyword.fetch!(opts, :name)
-    index = Keyword.fetch!(opts, :index)  # Required explicit index
+    # Required explicit index
+    index = Keyword.fetch!(opts, :index)
 
     quote do
       import ElixirProto.Schema, only: [defschema: 1]
@@ -37,11 +38,13 @@ defmodule ElixirProto.Schema do
 
       def __schema__(:name), do: @schema_name
       def __schema__(:fields), do: unquote(fields)
+
       def __schema__(:field_indices) do
         unquote(fields)
         |> Enum.with_index(1)
         |> Map.new(fn {field, index} -> {field, index} end)
       end
+
       def __schema__(:index_fields) do
         unquote(fields)
         |> Enum.with_index(1)
@@ -76,26 +79,32 @@ defmodule ElixirProto.Schema.Registry do
       index_fields = module.__schema__(:index_fields)
 
       # Check if module has explicit schema index
-      explicit_index = case function_exported?(module, :__schema_index__, 0) do
-        true -> module.__schema_index__()
-        false -> nil
-      end
+      explicit_index =
+        case function_exported?(module, :__schema_index__, 0) do
+          true -> module.__schema_index__()
+          false -> nil
+        end
 
       # Register schema in main registry
       registry = get_registry()
-      new_registry = Map.put(registry, schema_name, %{
-        module: module,
-        fields: fields,
-        field_indices: field_indices,
-        index_fields: index_fields
-      })
+
+      new_registry =
+        Map.put(registry, schema_name, %{
+          module: module,
+          fields: fields,
+          field_indices: field_indices,
+          index_fields: index_fields
+        })
+
       :persistent_term.put(@registry_key, new_registry)
 
       # Register schema index - explicit index is required
       if explicit_index do
         register_explicit_index(schema_name, explicit_index)
       else
-        raise CompileError, description: "Schema '#{schema_name}' must have an explicit index parameter. Use: use ElixirProto.Schema, name: \"#{schema_name}\", index: <number>"
+        raise CompileError,
+          description:
+            "Schema '#{schema_name}' must have an explicit index parameter. Use: use ElixirProto.Schema, name: \"#{schema_name}\", index: <number>"
       end
     end
   end
@@ -111,8 +120,11 @@ defmodule ElixirProto.Schema.Registry do
         # Index is available, register it
         # First check if schema already has a different index
         current_index = SchemaRegistry.get_index(schema_name)
+
         if current_index && current_index != explicit_index do
-          raise CompileError, description: "Schema '#{schema_name}' is already registered with index #{current_index}, cannot reassign to #{explicit_index}"
+          raise CompileError,
+            description:
+              "Schema '#{schema_name}' is already registered with index #{current_index}, cannot reassign to #{explicit_index}"
         end
 
         # Force registration with specific index
@@ -124,7 +136,9 @@ defmodule ElixirProto.Schema.Registry do
 
       true ->
         # Index conflict
-        raise CompileError, description: "Schema index #{explicit_index} is already assigned to '#{existing_name}', cannot assign to '#{schema_name}'"
+        raise CompileError,
+          description:
+            "Schema index #{explicit_index} is already assigned to '#{existing_name}', cannot assign to '#{schema_name}'"
     end
   end
 
@@ -141,6 +155,7 @@ defmodule ElixirProto.Schema.Registry do
   """
   def get_schema_by_module(module) do
     registry = get_registry()
+
     Enum.find_value(registry, fn {_name, schema} ->
       if schema.module == module, do: schema
     end)

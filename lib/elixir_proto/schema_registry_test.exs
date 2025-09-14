@@ -92,7 +92,6 @@ defmodule ElixirProto.SchemaRegistryTest do
     end
   end
 
-
   describe "export_registry/0 and import_registry/1" do
     test "exports and imports registry data" do
       SchemaRegistry.force_register_index("persistent.schema", 1)
