@@ -8,7 +8,7 @@ defmodule ElixirProto.Schema do
 
   defmacro __using__(opts) do
     name = Keyword.fetch!(opts, :name)
-    index = Keyword.get(opts, :index)  # Optional explicit index
+    index = Keyword.fetch!(opts, :index)  # Required explicit index
 
     quote do
       import ElixirProto.Schema, only: [defschema: 1]
