@@ -1,3 +1,10 @@
+[![CI](https://github.com/maxohq/elixir_proto/actions/workflows/ci.yml/badge.svg?style=flat)](https://github.com/maxohq/elixir_proto/actions/workflows/ci.yml)
+[![Hex.pm](https://img.shields.io/hexpm/v/elixir_proto.svg?style=flat)](https://hex.pm/packages/elixir_proto)
+[![Hex Docs](https://img.shields.io/badge/hex-docs-lightgreen.svg?style=flat)](https://hexdocs.pm/elixir_proto/)
+[![Total Downloads](https://img.shields.io/hexpm/dt/elixir_proto.svg?style=flat)](https://hex.pm/packages/elixir_proto)
+[![Licence](https://img.shields.io/hexpm/l/elixir_proto.svg?style=flat)](https://github.com/maxohq/elixir_proto/blob/main/LICENCE)
+
+
 # ElixirProto
 
 A compact serialization library for Elixir that uses schema indices and fixed tuples for space-efficient binary serialization with schema evolution support.
