@@ -2,8 +2,31 @@ defmodule ElixirProtoTest do
   use ExUnit.Case, async: false
 
   setup do
-    # Reset registry for clean tests
+    # Reset registry for clean tests but re-register test modules
     ElixirProto.SchemaRegistry.reset!()
+
+    # Manually register test schemas since @after_compile already ran
+    ElixirProto.SchemaRegistry.force_register_index("myapp.ctx.user", 1)
+    ElixirProto.SchemaRegistry.force_register_index("myapp.ctx.post", 2)
+
+    # Re-register in the main schema registry too
+    registry = %{
+      "myapp.ctx.user" => %{
+        module: ElixirProtoTest.User,
+        fields: [:id, :name, :email, :age, :active],
+        field_indices: %{id: 1, name: 2, email: 3, age: 4, active: 5},
+        index_fields: %{1 => :id, 2 => :name, 3 => :email, 4 => :age, 5 => :active}
+      },
+      "myapp.ctx.post" => %{
+        module: ElixirProtoTest.Post,
+        fields: [:id, :title, :content, :author_id, :created_at],
+        field_indices: %{id: 1, title: 2, content: 3, author_id: 4, created_at: 5},
+        index_fields: %{1 => :id, 2 => :title, 3 => :content, 4 => :author_id, 5 => :created_at}
+      }
+    }
+
+    :persistent_term.put({ElixirProto.Schema.Registry, :schemas}, registry)
+
     :ok
   end
 

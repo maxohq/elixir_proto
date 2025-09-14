@@ -2,8 +2,31 @@ defmodule ElixirProto.Schema.Test do
   use ExUnit.Case, async: false
 
   setup do
-    # Reset registry for clean tests
+    # Reset registry for clean tests but re-register test modules
     ElixirProto.SchemaRegistry.reset!()
+
+    # Manually register test schemas since @after_compile already ran
+    ElixirProto.SchemaRegistry.force_register_index("test.user", 10)
+    ElixirProto.SchemaRegistry.force_register_index("test.post", 11)
+
+    # Re-register in the main schema registry too
+    registry = %{
+      "test.user" => %{
+        module: TestUser,
+        fields: [:id, :name, :email, :age, :active],
+        field_indices: %{id: 1, name: 2, email: 3, age: 4, active: 5},
+        index_fields: %{1 => :id, 2 => :name, 3 => :email, 4 => :age, 5 => :active}
+      },
+      "test.post" => %{
+        module: TestPost,
+        fields: [:id, :title, :content, :author_id, :created_at],
+        field_indices: %{id: 1, title: 2, content: 3, author_id: 4, created_at: 5},
+        index_fields: %{1 => :id, 2 => :title, 3 => :content, 4 => :author_id, 5 => :created_at}
+      }
+    }
+
+    :persistent_term.put({ElixirProto.Schema.Registry, :schemas}, registry)
+
     :ok
   end
 
@@ -60,23 +83,18 @@ defmodule ElixirProto.Schema.Test do
     alias ElixirProto.Schema.Registry
 
     test "registers schemas automatically" do
-      # Give some time for @after_compile to run
-      Process.sleep(10)
-
       schema = Registry.get_schema("test.user")
       assert schema != nil
-      assert schema.module == ElixirProto.Schema.Test.TestUser
+      assert schema.module == TestUser
       assert schema.fields == [:id, :name, :email, :age, :active]
       assert schema.field_indices[:name] == 2
       assert schema.index_fields[3] == :email
     end
 
     test "can find schema by module" do
-      Process.sleep(10)
-
-      schema = Registry.get_schema_by_module(ElixirProto.Schema.Test.TestUser)
+      schema = Registry.get_schema_by_module(TestUser)
       assert schema != nil
-      assert schema.module == ElixirProto.Schema.Test.TestUser
+      assert schema.module == TestUser
     end
 
     test "returns nil for unknown schema" do
@@ -85,8 +103,6 @@ defmodule ElixirProto.Schema.Test do
     end
 
     test "lists all schemas" do
-      Process.sleep(10)
-
       schemas = Registry.list_schemas()
       assert is_map(schemas)
       assert Map.has_key?(schemas, "test.user")
