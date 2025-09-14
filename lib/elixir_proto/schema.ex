@@ -11,7 +11,7 @@ defmodule ElixirProto.Schema do
     index = Keyword.get(opts, :index)  # Optional explicit index
 
     quote do
-      import ElixirProto.Schema, only: [defschema: 2]
+      import ElixirProto.Schema, only: [defschema: 1]
       @schema_name unquote(name)
       @schema_index unquote(index)
     end
@@ -23,12 +23,12 @@ defmodule ElixirProto.Schema do
   ## Example
 
       defmodule User do
-        use ElixirProto.Schema, name: "myapp.ctx.user"
+        use ElixirProto.Schema, name: "myapp.ctx.user", index: 1
 
-        defschema User, [:id, :name, :email, :age, :active]
+        defschema [:id, :name, :email, :age, :active]
       end
   """
-  defmacro defschema(_struct_name, fields) when is_list(fields) do
+  defmacro defschema(fields) when is_list(fields) do
     quote do
       defstruct unquote(fields) |> Enum.map(&{&1, nil})
 

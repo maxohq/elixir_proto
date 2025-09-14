@@ -18,7 +18,7 @@ This approach provides significant space savings while maintaining full type saf
 defmodule User do
   use ElixirProto.Schema, name: "myapp.ctx.user", index: 1
 
-  defschema User, [:id, :name, :email, :age, :active]
+  defschema [:id, :name, :email, :age, :active]
 end
 ```
 
@@ -60,13 +60,13 @@ decoded = ElixirProto.decode(encoded)
 defmodule User do
   use ElixirProto.Schema, name: "myapp.ctx.user", index: 1
 
-  defschema User, [:id, :name, :email, :age, :active]
+  defschema [:id, :name, :email, :age, :active]
 end
 
 defmodule Post do
   use ElixirProto.Schema, name: "myapp.ctx.post", index: 2
 
-  defschema Post, [:id, :title, :content, :author_id, :created_at]
+  defschema [:id, :title, :content, :author_id, :created_at]
 end
 ```
 
@@ -193,19 +193,19 @@ The explicit index system enables controlled schema evolution:
 # V1 Schema
 defmodule User do
   use ElixirProto.Schema, name: "myapp.ctx.user", index: 1
-  defschema User, [:id, :name, :email]
+  defschema [:id, :name, :email]
 end
 
 # V2 Schema - field rename (safe)
 defmodule User do
   use ElixirProto.Schema, name: "myapp.ctx.user", index: 1
-  defschema User, [:id, :full_name, :email] # :name → :full_name
+  defschema [:id, :full_name, :email] # :name → :full_name
 end
 
 # V3 Schema - field addition (safe)
 defmodule User do
   use ElixirProto.Schema, name: "myapp.ctx.user", index: 1
-  defschema User, [:id, :full_name, :email, :age] # New field appended
+  defschema [:id, :full_name, :email, :age] # New field appended
 end
 ```
 

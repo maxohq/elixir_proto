@@ -10,12 +10,12 @@ defmodule ElixirProtoTest do
   # Test schemas
   defmodule User do
     use ElixirProto.Schema, name: "myapp.ctx.user", index: 1
-    defschema User, [:id, :name, :email, :age, :active]
+    defschema [:id, :name, :email, :age, :active]
   end
 
   defmodule Post do
     use ElixirProto.Schema, name: "myapp.ctx.post", index: 2
-    defschema Post, [:id, :title, :content, :author_id, :created_at]
+    defschema [:id, :title, :content, :author_id, :created_at]
   end
 
   # Regular struct without ElixirProto schema (for testing error cases)
