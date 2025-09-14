@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.1.4] - 2025-09-14
+
+### Added
+- **TypedSchema - Enhanced Type Safety**: New `ElixirProto.TypedSchema` module providing TypedStruct-inspired macro system with explicit field indices
+- **Dialyzer Integration**: Automatic `@type t()` generation for full static analysis support and IDE integration
+- **Explicit Field Indices**: Mandatory field indices for deterministic serialization order and safer schema evolution
+- **Advanced Field Control**: Fine-grained field enforcement, defaults, and nullability handling
+- **Function Defaults**: Support for function references as defaults (e.g., `&DateTime.utc_now/0`) without evaluation during struct creation
+- **Global Enforcement Options**: Optional `enforce: true` at schema level with per-field overrides
+- **Comprehensive Integration Tests**: 16 integration tests validating ElixirProto serialization compatibility
+- **Schema Evolution Safety**: Safe field management through explicit indices - field names can change, code can be reordered, but indices must remain stable
+- **Developer Experience**: Rich IDE autocompletion, type hints, and compile-time validation
+
+### Features
+- **Two Schema Approaches**: Basic `Schema` for simple use cases, advanced `TypedSchema` for enhanced type safety
+- **Full Backward Compatibility**: TypedSchema generates identical serialization format to regular Schema
+- **Protobuf-Style Conventions**: All fields optional by default, enforcement opt-in only (aligns with protobuf standards)
+- **Mixed Schema Support**: TypedSchema and Schema modules fully interoperable within same application
+- **Zero Runtime Overhead**: Type specifications are compile-time only, no performance impact
+
+### Documentation
+- **Comprehensive README Updates**: Added TypedSchema section with usage examples, comparison table, and migration guide
+- **Clear Field Behavior**: Documentation emphasizes optional-by-default field behavior following protobuf conventions
+- **Developer Experience Benefits**: Detailed explanation of static analysis, IDE integration, and schema evolution advantages
+
 ## [0.1.3] - 2025-09-14
 
 ### Added

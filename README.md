@@ -223,14 +223,15 @@ end
 
 **IDE Integration**: Rich autocompletion and inline documentation through type specifications.
 
-**Schema Evolution**: Explicit indices enable safer field reordering without breaking serialization compatibility.
+**Schema Evolution**: Explicit indices provide safer field management without breaking serialization compatibility.
 
 ```elixir
-# Safe evolution - reorder fields by changing indices (all optional by default)
+# Safe evolution - reorder fields in code without changing indices (all optional by default)
 typedschema do
-  field :name, String.t(), index: 1      # Was index: 2, moved up (optional)
-  field :id, pos_integer(), index: 2     # Was index: 1, moved down (optional)
-  field :email, String.t(), index: 3     # Unchanged (optional)
+  field :name, String.t(), index: 2      # Same index: 2, just reordered in code (optional)
+  field :id, pos_integer(), index: 1     # Same index: 1, just reordered in code (optional)
+  field :email, String.t(), index: 3     # Same index: 3, unchanged (optional)
+  field :status, atom(), index: 4        # NEW field with new index (optional)
 end
 ```
 
@@ -486,15 +487,15 @@ defmodule User do
   end
 end
 
-# V2 - Safe field reordering and addition
+# V2 - Safe field renaming and addition (NEVER change indices!)
 defmodule User do
   use ElixirProto.TypedSchema, name: "myapp.ctx.user", index: 1
 
   typedschema do
-    field :id, pos_integer(), index: 1                   # Optional
-    field :full_name, String.t(), index: 2               # Renamed, optional
-    field :age, pos_integer(), index: 4                  # New field, optional
-    field :email, String.t(), index: 3                   # Reordered in definition, optional
+    field :id, pos_integer(), index: 1                   # Same index: 1, optional
+    field :full_name, String.t(), index: 2               # Same index: 2, renamed from :name, optional
+    field :email, String.t(), index: 3                   # Same index: 3, reordered in code, optional
+    field :age, pos_integer(), index: 4                  # NEW field with NEW index, optional
   end
 end
 
@@ -512,13 +513,26 @@ defmodule User do
 end
 ```
 
-**Compatibility Rules:**
+**Critical Compatibility Rules:**
+- **NEVER change field indices** - indices are the permanent serialization contract
 - Schema index must remain constant for backward compatibility
 - **Basic Schema**: New fields must be appended to maintain position mapping
-- **TypedSchema**: Fields can be added at any explicit index, enabling flexible evolution
-- Field renames are safe as only indices matter for serialization
-- Field removal requires careful consideration of data migration
+- **TypedSchema**: New fields can use any unused index number
+- **Field renames are safe** - only indices matter for serialization, not field names
+- **Code reordering is safe** - definition order doesn't affect serialization
+- **Field removal requires migration planning** - old data may contain removed fields
 - **TypedSchema** provides compile-time validation of index conflicts
+
+**What you CAN do safely:**
+- Add new fields with new indices
+- Rename existing fields (keep same index)
+- Reorder field definitions in code (keep same indices)
+- Add defaults to existing fields
+- Change field types (with careful consideration)
+
+**What you MUST NEVER do:**
+- Change an existing field's index number
+- Reuse an index number from a removed field (in same schema version)
 
 ### Type Safety
 - Leverages Erlang's robust term serialization
