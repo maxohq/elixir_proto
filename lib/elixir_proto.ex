@@ -179,6 +179,11 @@ defmodule ElixirProto do
     end
   end
 
+  # Handle lists by recursively encoding each element
+  defp encode_field_value(list) when is_list(list) do
+    Enum.map(list, &encode_field_value/1)
+  end
+
   defp encode_field_value(other_value), do: other_value
 
   @doc false
@@ -216,6 +221,11 @@ defmodule ElixirProto do
             struct(module, field_map)
         end
     end
+  end
+
+  # Handle lists by recursively decoding each element
+  defp decode_field_value(list) when is_list(list) do
+    Enum.map(list, &decode_field_value/1)
   end
 
   defp decode_field_value(other_value), do: other_value
