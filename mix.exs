@@ -24,7 +24,8 @@ defmodule ElixirProto.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:maxo_test_iex, "~> 0.1", only: [:test]}
+      {:maxo_test_iex, "~> 0.1", only: [:test]},
+      {:benchee, "~> 1.0", only: :dev}
     ]
   end
 end
