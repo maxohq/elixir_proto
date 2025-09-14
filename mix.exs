@@ -76,7 +76,9 @@ defmodule ElixirProto.MixProject do
       extras: [
         "README.md",
         "CHANGELOG.md",
-        "BENCHMARK_RESULTS.md"
+        "BENCHMARK_RESULTS.md",
+        "benchmark_output_latest.txt",
+        "PITCH.md"
       ]
     ]
   end
