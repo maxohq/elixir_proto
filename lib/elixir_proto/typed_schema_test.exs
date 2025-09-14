@@ -1,5 +1,6 @@
 defmodule ElixirProto.TypedSchemaTest do
   use ExUnit.Case, async: false
+  import ExUnit.CaptureIO
 
   # Test schemas defined within test module to avoid global pollution
   defmodule BasicUser do
@@ -136,115 +137,133 @@ defmodule ElixirProto.TypedSchemaTest do
 
   describe "EXP001_1A_T2: Test field index validation (missing, duplicate, negative)" do
     test "raises on missing index" do
-      assert_raise CompileError, ~r/cannot compile module/, fn ->
-        defmodule InvalidNoIndex do
-          use ElixirProto.TypedSchema, name: "test.invalid.no.index", index: 600
+      capture_io(fn ->
+        assert_raise CompileError, ~r/Missing required options for field :name/, fn ->
+          defmodule InvalidNoIndex do
+            use ElixirProto.TypedSchema, name: "test.invalid.no.index", index: 600
 
-          typedschema do
-            # Missing index
-            field(:name, String.t())
+            typedschema do
+              # Missing index - this should give a clear error message
+              field(:name, String.t())
+            end
           end
         end
-      end
+      end)
     end
 
     test "raises on duplicate indices" do
-      assert_raise ArgumentError, ~r/index 1 is already used by field/, fn ->
-        defmodule InvalidDuplicateIndex do
-          use ElixirProto.TypedSchema, name: "test.invalid.dup.index", index: 601
+      capture_io(fn ->
+        assert_raise CompileError, ~r/Duplicate field index 1/, fn ->
+          defmodule InvalidDuplicateIndex do
+            use ElixirProto.TypedSchema, name: "test.invalid.dup.index", index: 601
 
-          typedschema do
-            field(:name, String.t(), index: 1)
-            # Duplicate index
-            field(:email, String.t(), index: 1)
+            typedschema do
+              field(:name, String.t(), index: 1)
+              # Duplicate index - should give clear error with suggestion
+              field(:email, String.t(), index: 1)
+            end
           end
         end
-      end
+      end)
     end
 
     test "raises on negative index" do
-      assert_raise ArgumentError, ~r/must have a positive integer :index/, fn ->
-        defmodule InvalidNegativeIndex do
-          use ElixirProto.TypedSchema, name: "test.invalid.negative.index", index: 602
+      capture_io(fn ->
+        assert_raise CompileError, ~r/Invalid :index value -1/, fn ->
+          defmodule InvalidNegativeIndex do
+            use ElixirProto.TypedSchema, name: "test.invalid.negative.index", index: 602
 
-          typedschema do
-            # Negative index
-            field(:name, String.t(), index: -1)
+            typedschema do
+              # Negative index - should give clear error message
+              field(:name, String.t(), index: -1)
+            end
           end
         end
-      end
+      end)
     end
 
     test "raises on zero index" do
-      assert_raise ArgumentError, ~r/must have a positive integer :index/, fn ->
-        defmodule InvalidZeroIndex do
-          use ElixirProto.TypedSchema, name: "test.invalid.zero.index", index: 603
+      capture_io(fn ->
+        assert_raise CompileError, ~r/Invalid :index value 0/, fn ->
+          defmodule InvalidZeroIndex do
+            use ElixirProto.TypedSchema, name: "test.invalid.zero.index", index: 603
 
-          typedschema do
-            # Zero index
-            field(:name, String.t(), index: 0)
+            typedschema do
+              # Zero index - should give clear error message
+              field(:name, String.t(), index: 0)
+            end
           end
         end
-      end
+      end)
     end
 
     test "raises on non-integer index" do
-      assert_raise ArgumentError, ~r/must have a positive integer :index/, fn ->
-        defmodule InvalidStringIndex do
-          use ElixirProto.TypedSchema, name: "test.invalid.string.index", index: 604
+      capture_io(fn ->
+        assert_raise CompileError, ~r/Invalid :index option for field :name/, fn ->
+          defmodule InvalidStringIndex do
+            use ElixirProto.TypedSchema, name: "test.invalid.string.index", index: 604
 
-          typedschema do
-            # String index
-            field(:name, String.t(), index: "1")
+            typedschema do
+              # String index - should give clear error about type
+              field(:name, String.t(), index: "1")
+            end
           end
         end
-      end
+      end)
     end
   end
 
   describe "EXP001_1A_T3: Test field name validation and error messages" do
     test "raises on duplicate field names" do
-      assert_raise ArgumentError, ~r/field :name is already defined/, fn ->
-        defmodule InvalidDuplicateName do
-          use ElixirProto.TypedSchema, name: "test.invalid.dup.name", index: 700
-
-          typedschema do
-            field(:name, String.t(), index: 1)
-            # Duplicate name
-            field(:name, String.t(), index: 2)
-          end
-        end
-      end
-    end
-
-    test "raises on non-atom field name" do
-      assert_raise FunctionClauseError, fn ->
-        defmodule InvalidFieldName do
-          use ElixirProto.TypedSchema, name: "test.invalid.field.name", index: 701
-
-          typedschema do
-            # String field name
-            field("name", String.t(), index: 1)
-          end
-        end
-      end
-    end
-
-    test "provides clear error messages for index conflicts" do
-      error =
-        assert_raise ArgumentError, fn ->
-          defmodule IndexConflictTest do
-            use ElixirProto.TypedSchema, name: "test.index.conflict", index: 702
+      capture_io(fn ->
+        assert_raise CompileError, ~r/Duplicate field name :name/, fn ->
+          defmodule InvalidDuplicateName do
+            use ElixirProto.TypedSchema, name: "test.invalid.dup.name", index: 700
 
             typedschema do
-              field(:first_field, String.t(), index: 5)
-              # Conflict
-              field(:second_field, String.t(), index: 5)
+              field(:name, String.t(), index: 1)
+              # Duplicate name - should give clear error
+              field(:name, String.t(), index: 2)
             end
           end
         end
+      end)
+    end
 
-      assert error.message =~ "index 5 is already used by field :first_field"
+    test "raises on non-atom field name" do
+      capture_io(fn ->
+        assert_raise CompileError, ~r/Invalid field name "name"/, fn ->
+          defmodule InvalidFieldName do
+            use ElixirProto.TypedSchema, name: "test.invalid.field.name", index: 701
+
+            typedschema do
+              # String field name - should give clear error with suggestion
+              field("name", String.t(), index: 1)
+            end
+          end
+        end
+      end)
+    end
+
+    test "provides clear error messages for index conflicts" do
+      capture_io(fn ->
+        error =
+          assert_raise CompileError, fn ->
+            defmodule IndexConflictTest do
+              use ElixirProto.TypedSchema, name: "test.index.conflict", index: 702
+
+              typedschema do
+                field(:first_field, String.t(), index: 5)
+                # Conflict - should give clear error with suggestion
+                field(:second_field, String.t(), index: 5)
+              end
+            end
+          end
+
+        assert error.description =~ "Duplicate field index 5"
+        assert error.description =~ "already used by field :first_field"
+        assert error.description =~ "Choose a different index"
+      end)
     end
 
     test "handles complex field types correctly" do

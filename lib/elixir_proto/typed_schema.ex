@@ -29,7 +29,7 @@ defmodule ElixirProto.TypedSchema do
       ElixirProto.SchemaRegistry.force_register_index(unquote(schema_name), unquote(schema_index))
 
       # Import typedschema macro
-      import ElixirProto.TypedSchema, only: [typedschema: 1, typedschema: 2, field: 3]
+      import ElixirProto.TypedSchema, only: [typedschema: 1, typedschema: 2, field: 2, field: 3]
 
       # Store schema metadata
       @ts_schema_name unquote(schema_name)
@@ -97,6 +97,45 @@ defmodule ElixirProto.TypedSchema do
     end
   end
 
+  # Handle non-atom field names explicitly
+  defmacro field(name, type, opts) when is_list(opts) do
+    quote bind_quoted: [name: name, type: Macro.escape(type), opts: opts] do
+      ElixirProto.TypedSchema.__field__(name, type, opts, __MODULE__)
+    end
+  end
+
+  @doc """
+  This version of field/2 is called when the required options are missing.
+  It provides a clear error message for better developer experience.
+  """
+  defmacro field(name, type) do
+    name_str =
+      case name do
+        name when is_atom(name) -> inspect(name)
+        _ -> "#{inspect(name)}"
+      end
+
+    raise CompileError,
+      description: """
+      Missing required options for field #{name_str}.
+
+      TypedSchema fields require explicit field indices and options.
+
+      Expected format:
+          field #{name_str}, #{Macro.to_string(type)}, index: <positive_integer>
+
+      Example:
+          field #{name_str}, #{Macro.to_string(type)}, index: 1, enforce: true
+
+      Available options:
+      - index: pos_integer() - REQUIRED field index for serialization order
+      - enforce: boolean() - Whether this field is required (optional)
+      - default: any() - Default value (optional)
+
+      For more information, see: ElixirProto.TypedSchema documentation
+      """
+  end
+
   @doc false
   def __field__(name, type, opts, module) when is_atom(name) do
     # Get current field definitions to check for duplicates
@@ -106,19 +145,88 @@ defmodule ElixirProto.TypedSchema do
     # Validate field index is provided and unique
     index = opts[:index]
 
-    if is_nil(index) or not is_integer(index) or index < 1 do
-      raise ArgumentError, "field #{inspect(name)} must have a positive integer :index"
+    cond do
+      is_nil(index) ->
+        raise CompileError,
+          description: """
+          Missing required :index option for field #{inspect(name)}.
+
+          Every TypedSchema field must have an explicit positive integer index.
+
+          Fix:
+              field #{inspect(name)}, #{Macro.to_string(type)}, index: <positive_integer>
+
+          Example:
+              field #{inspect(name)}, #{Macro.to_string(type)}, index: 1
+          """
+
+      not is_integer(index) ->
+        raise CompileError,
+          description: """
+          Invalid :index option for field #{inspect(name)}.
+
+          Expected: positive integer
+          Got: #{inspect(index)} (#{if is_map(index) and Map.has_key?(index, :__struct__), do: inspect(index.__struct__), else: typeof(index)})
+
+          Fix:
+              field #{inspect(name)}, #{Macro.to_string(type)}, index: <positive_integer>
+
+          Example:
+              field #{inspect(name)}, #{Macro.to_string(type)}, index: 1
+          """
+
+      index < 1 ->
+        raise CompileError,
+          description: """
+          Invalid :index value #{index} for field #{inspect(name)}.
+
+          Field indices must be positive integers (>= 1) to ensure proper serialization.
+
+          Fix:
+              field #{inspect(name)}, #{Macro.to_string(type)}, index: <positive_integer>
+
+          Example:
+              field #{inspect(name)}, #{Macro.to_string(type)}, index: 1
+          """
+
+      true ->
+        :ok
     end
 
     # Check for duplicate field names
     if Enum.any?(existing_fields, fn {existing_name, _} -> existing_name == name end) do
-      raise ArgumentError, "field #{inspect(name)} is already defined"
+      raise CompileError,
+        description: """
+        Duplicate field name #{inspect(name)} in TypedSchema.
+
+        Each field must have a unique name within the schema.
+
+        Current fields: #{existing_fields |> Enum.map(&elem(&1, 0)) |> Enum.map(&inspect/1) |> Enum.join(", ")}
+
+        Solution: Choose a different field name or remove the duplicate definition.
+        """
     end
 
     # Check for duplicate indices
     if Enum.any?(existing_indices, fn {_, existing_index} -> existing_index == index end) do
       existing_field = Enum.find(existing_indices, fn {_, idx} -> idx == index end) |> elem(0)
-      raise ArgumentError, "index #{index} is already used by field #{inspect(existing_field)}"
+
+      raise CompileError,
+        description: """
+        Duplicate field index #{index} in TypedSchema.
+
+        Index #{index} is already used by field #{inspect(existing_field)}.
+
+        Each field must have a unique positive integer index for proper serialization.
+
+        Current field indices:
+        #{existing_indices |> Enum.map(fn {field, idx} -> "  #{inspect(field)}: #{idx}" end) |> Enum.join("\n")}
+
+        Solution: Choose a different index for field #{inspect(name)}.
+
+        Example:
+            field #{inspect(name)}, #{Macro.to_string(type)}, index: #{(existing_indices |> Enum.map(&elem(&1, 1)) |> Enum.max()) + 1}
+        """
     end
 
     # Determine if field should be enforced
@@ -153,9 +261,31 @@ defmodule ElixirProto.TypedSchema do
     end
   end
 
-  def __field__(name, _type, _opts, _module) do
-    raise ArgumentError, "field name must be an atom, got #{inspect(name)}"
+  def __field__(name, type, _opts, _module) do
+    raise CompileError,
+      description: """
+      Invalid field name #{inspect(name)} in TypedSchema.
+
+      Field names must be atoms (not strings, numbers, or other types).
+
+      Got: #{inspect(name)} (#{if is_map(name) and Map.has_key?(name, :__struct__), do: inspect(name.__struct__), else: typeof(name)})
+      Expected: atom
+
+      Fix:
+          field #{name |> to_string() |> String.trim("\"") |> String.to_atom() |> inspect()}, #{Macro.to_string(type)}, index: <positive_integer>
+
+      Example:
+          field :my_field, #{Macro.to_string(type)}, index: 1
+      """
   end
+
+  # Helper function to get type name for non-struct types
+  defp typeof(val) when is_binary(val), do: :string
+  defp typeof(val) when is_integer(val), do: :integer
+  defp typeof(val) when is_float(val), do: :float
+  defp typeof(val) when is_list(val), do: :list
+  defp typeof(val) when is_tuple(val), do: :tuple
+  defp typeof(_), do: :unknown
 
   # Generate final struct and type definitions
   defmacro __before_compile__(env) do
