@@ -1,23 +1,28 @@
 # Simple debug analysis using existing test modules
 # Run with: mix run benchmarks/debug_simple.exs
 
-# Use existing modules from our tests
-alias ElixirProtoTest.User
+# Define test module for benchmarks
+defmodule SimpleUser do
+  use ElixirProto.Schema, name: "simple.user", index: 1
+  defschema [:id, :name, :email, :age, :active]
+end
 
 defmodule PlainSerializer do
   def encode(data), do: data |> :erlang.term_to_binary() |> :zlib.compress()
 end
 
-# Create test cases
-full_user = %User{id: 1, name: "Alice", email: "alice@example.com", age: 30, active: true}
-sparse_user = %User{id: 1, name: "Alice"}  # only 2 out of 7 fields
+defmodule SimpleDebugger do
+  def run do
+    # Create test cases
+    full_user = %SimpleUser{id: 1, name: "Alice", email: "alice@example.com", age: 30, active: true}
+    sparse_user = %SimpleUser{id: 1, name: "Alice"}  # only 2 out of 5 fields
 
-IO.puts("🔍 WHY IS ELIXIRPROTO PAYLOAD SIZE SOMETIMES LARGER?")
-IO.puts(String.duplicate("=", 60))
+    IO.puts("🔍 WHY IS ELIXIRPROTO PAYLOAD SIZE SOMETIMES LARGER?")
+    IO.puts(String.duplicate("=", 60))
 
 # Let's break down what ElixirProto is actually storing
-schema = ElixirProto.Schema.Registry.get_schema_by_module(User)
-schema_name = "myapp.ctx.user"  # from our test module
+schema = ElixirProto.Schema.Registry.get_schema_by_module(SimpleUser)
+schema_name = "simple.user"  # from our test module
 
 IO.puts("\n📊 ANALYZING SERIALIZED DATA STRUCTURES")
 
@@ -129,3 +134,8 @@ IO.puts("\n🏆 WHEN ELIXIRPROTO WINS:")
 IO.puts("- Large sparse structs (many nil fields)")
 IO.puts("- Long field names")
 IO.puts("- Repeated serialization of same schema")
+  end
+end
+
+# Run the analysis
+SimpleDebugger.run()

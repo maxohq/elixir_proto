@@ -3,8 +3,8 @@
 # Run with: mix run benchmarks/debug_sizes.exs
 
 defmodule DebugUser do
-  use ElixirProto.Schema, name: "debug.user"
-  defschema DebugUser, [:id, :name, :email]
+  use ElixirProto.Schema, name: "debug.user", index: 1
+  defschema [:id, :name, :email]
 end
 
 defmodule PlainSerializer do
@@ -15,12 +15,21 @@ defmodule PlainSerializer do
   end
 end
 
-# Create test data
-full_user = %DebugUser{id: 1, name: "Alice", email: "alice@example.com"}
-sparse_user = %DebugUser{id: 1, name: "Alice"}  # email is nil
+# Real-world scenario: what if we had longer field names?
+defmodule LongFieldUser do
+  use ElixirProto.Schema, name: "debug.long.field.user", index: 2
+  defschema [:user_identification_number, :user_full_display_name, :user_email_address]
+end
+
+# Module with functions that create test data
+defmodule DebugTester do
+  def run do
+    # Create test data
+    full_user = %DebugUser{id: 1, name: "Alice", email: "alice@example.com"}
+    sparse_user = %DebugUser{id: 1, name: "Alice"}  # email is nil
 
 IO.puts("🔍 DEBUGGING ELIXIRPROTO SERIALIZATION")
-IO.puts("=" * 60)
+IO.puts(String.duplicate("=", 60))
 
 # Debug the serialization process step by step
 IO.puts("\n📊 FULL USER ANALYSIS")
@@ -125,21 +134,21 @@ IO.puts("3. Nil field omission is the main space saver")
 IO.puts("4. Compression is very effective on both approaches")
 
 # Real-world scenario: what if we had longer field names?
-defmodule LongFieldUser do
-  use ElixirProto.Schema, name: "debug.long.field.user"
-  defschema LongFieldUser, [:user_identification_number, :user_full_display_name, :user_email_address]
+    long_user = %LongFieldUser{
+      user_identification_number: 1,
+      user_full_display_name: "Alice",
+      user_email_address: "alice@example.com"
+    }
+
+    proto_long = ElixirProto.encode(long_user)
+    plain_long = PlainSerializer.encode(long_user)
+
+    IO.puts("\n🏷️  LONG FIELD NAMES TEST:")
+    IO.puts("ElixirProto: #{byte_size(proto_long)} bytes")
+    IO.puts("Plain:       #{byte_size(plain_long)} bytes")
+    IO.puts("Savings:     #{byte_size(plain_long) - byte_size(proto_long)} bytes")
+  end
 end
 
-long_user = %LongFieldUser{
-  user_identification_number: 1,
-  user_full_display_name: "Alice",
-  user_email_address: "alice@example.com"
-}
-
-proto_long = ElixirProto.encode(long_user)
-plain_long = PlainSerializer.encode(long_user)
-
-IO.puts("\n🏷️  LONG FIELD NAMES TEST:")
-IO.puts("ElixirProto: #{byte_size(proto_long)} bytes")
-IO.puts("Plain:       #{byte_size(plain_long)} bytes")
-IO.puts("Savings:     #{byte_size(plain_long) - byte_size(proto_long)} bytes")
+# Run the debug analysis
+DebugTester.run()

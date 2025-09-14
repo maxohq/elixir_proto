@@ -4,21 +4,21 @@
 
 # Define test schemas
 defmodule BenchUser do
-  use ElixirProto.Schema, name: "bench.user"
-  defschema BenchUser, [:id, :name, :email, :age, :active, :created_at, :metadata]
+  use ElixirProto.Schema, name: "bench.user", index: 1
+  defschema [:id, :name, :email, :age, :active, :created_at, :metadata]
 end
 
 defmodule BenchProduct do
-  use ElixirProto.Schema, name: "bench.product"
-  defschema BenchProduct, [:id, :name, :description, :price, :category, :in_stock, :tags, :specs]
+  use ElixirProto.Schema, name: "bench.product", index: 2
+  defschema [:id, :name, :description, :price, :category, :in_stock, :tags, :specs]
 end
 
 # Large struct with many fields (to test field name overhead)
 defmodule LargeStruct do
-  use ElixirProto.Schema, name: "bench.large"
+  use ElixirProto.Schema, name: "bench.large", index: 3
 
   # 50 fields to simulate a real complex struct
-  defschema LargeStruct, [
+  defschema [
     :field_01, :field_02, :field_03, :field_04, :field_05,
     :field_06, :field_07, :field_08, :field_09, :field_10,
     :field_11, :field_12, :field_13, :field_14, :field_15,
