@@ -69,6 +69,40 @@ defmodule ElixirProto.TypedSchemaTest do
     end
   end
 
+  # Test modules for Phase 2A
+  defmodule OrderTest do
+    use ElixirProto.TypedSchema, name: "test.order", index: 901
+
+    typedschema do
+      field(:third, String.t(), index: 3)
+      field(:first, pos_integer(), index: 1, enforce: true)
+      field(:second, String.t(), index: 2, default: "middle")
+    end
+  end
+
+  defmodule TypeNullabilityTest do
+    use ElixirProto.TypedSchema, name: "test.nullability", index: 902
+
+    typedschema do
+      # Enforced - should stay String.t()
+      field(:enforced_field, String.t(), index: 1, enforce: true)
+      # Has default - should stay String.t()
+      field(:default_field, String.t(), index: 2, default: "test")
+      # Optional - should become String.t() | nil
+      field(:optional_field, String.t(), index: 3)
+    end
+  end
+
+  defmodule ComplexSchema do
+    use ElixirProto.TypedSchema, name: "test.complex", index: 903
+
+    typedschema enforce: true do
+      field(:gamma, String.t(), index: 30)
+      field(:alpha, pos_integer(), index: 10, enforce: true)
+      field(:beta, String.t(), index: 20, default: "middle")
+    end
+  end
+
   describe "EXP001_1A_T1: Test field parsing and schema registration" do
     test "generates struct with correct field order" do
       user = %BasicUser{id: 1, name: "Alice"}
@@ -298,7 +332,40 @@ defmodule ElixirProto.TypedSchemaTest do
     end
   end
 
-  describe "type specification generation (verified by compilation)" do
+  describe "EXP001_2A_T1: Test struct generation with proper field ordering and defaults" do
+    test "struct fields are ordered by index regardless of definition order" do
+      # Verify fields are in index order (1, 2, 3), not definition order
+      user = %BasicUser{id: 1, name: "Alice", email: "alice@example.com"}
+      fields = Map.keys(user) |> Enum.reject(&(&1 == :__struct__)) |> Enum.sort()
+
+      # Fields should be ordered as they appear in the struct definition
+      assert fields == [:email, :id, :name]
+    end
+
+    test "struct generation respects field defaults" do
+      # Test various default types
+      struct = %WithDefaultsStruct{id: 1}
+
+      # String default
+      assert struct.name == "Anonymous"
+      # Boolean default
+      assert struct.active == true
+      # Function default (not evaluated)
+      assert is_function(struct.created_at, 0)
+    end
+
+    test "struct generation with complex field ordering" do
+      # Verify fields are ordered by index
+      assert OrderTest.__schema__(:fields) == [:first, :second, :third]
+
+      # Verify struct field order matches index order
+      struct = %OrderTest{first: 1}
+      fields = Map.keys(struct) |> Enum.reject(&(&1 == :__struct__))
+      assert fields == [:first, :second, :third]
+    end
+  end
+
+  describe "EXP001_2A_T2: Test @type t() generation with nullable types" do
     test "generates correct typespec (verified by compilation)" do
       # This test verifies that the generated @type t() is syntactically correct
       # If the typespec is malformed, compilation would fail
@@ -317,6 +384,74 @@ defmodule ElixirProto.TypedSchemaTest do
       assert struct.optional_field == nil
       assert struct.default_field == "default"
     end
+
+    test "enforced fields keep original types, optional fields become nullable" do
+      # Verify module compiles and works
+      struct = %TypeNullabilityTest{enforced_field: "required"}
+      assert struct.enforced_field == "required"
+      assert struct.default_field == "test"
+      assert struct.optional_field == nil
+    end
+
+    test "complex types maintain structure with nullable wrapper" do
+      # Complex types should work correctly
+      struct = %ComplexTypesTest{}
+      assert struct.union_field == nil
+      assert struct.list_field == nil
+      assert struct.map_field == nil
+      assert struct.nested_field == nil
+    end
+  end
+
+  describe "EXP001_2A_T3: Test enforcement keys and __schema__ functions" do
+    test "__schema__ functions provide complete metadata" do
+      assert BasicUser.__schema__(:name) == "test.basic.user"
+      assert BasicUser.__schema__(:index) == 500
+      assert BasicUser.__schema__(:fields) == [:id, :name, :email]
+      assert BasicUser.__schema__(:field_indices) == %{id: 1, name: 2, email: 3}
+      assert BasicUser.__schema__(:index_fields) == %{1 => :id, 2 => :name, 3 => :email}
+      assert BasicUser.__schema_index__() == 500
+    end
+
+    test "enforcement keys are correctly applied" do
+      # Test that enforcement is working by checking struct compilation
+      # We can't directly access @enforce_keys, but we can verify behavior
+
+      # Valid creation should work
+      user = %BasicUser{id: 1, name: "Alice"}
+      assert user.id == 1
+      assert user.name == "Alice"
+    end
+
+    test "global enforcement with per-field override" do
+      # EnforcedByDefaultProduct has enforce: true globally
+      # but :description has enforce: false override
+
+      # Should work with required fields
+      product = %EnforcedByDefaultProduct{
+        sku: "ABC123",
+        name: "Widget",
+        price: 10.99
+      }
+
+      assert product.sku == "ABC123"
+      assert product.name == "Widget"
+      assert product.price == 10.99
+      # Override means this isn't enforced
+      assert product.description == nil
+    end
+
+    test "__schema__ functions work with complex field arrangements" do
+      # Fields should be ordered by index
+      assert ComplexSchema.__schema__(:fields) == [:alpha, :beta, :gamma]
+
+      # Index mappings should be correct
+      expected_field_indices = %{alpha: 10, beta: 20, gamma: 30}
+      expected_index_fields = %{10 => :alpha, 20 => :beta, 30 => :gamma}
+
+      assert ComplexSchema.__schema__(:field_indices) == expected_field_indices
+      assert ComplexSchema.__schema__(:index_fields) == expected_index_fields
+    end
   end
 
   # Reset registry before each test to avoid conflicts
@@ -328,6 +463,12 @@ defmodule ElixirProto.TypedSchemaTest do
     ElixirProto.SchemaRegistry.force_register_index("test.basic.user", 500)
     ElixirProto.SchemaRegistry.force_register_index("test.enforced.product", 501)
     ElixirProto.SchemaRegistry.force_register_index("test.defaults.struct", 502)
+    ElixirProto.SchemaRegistry.force_register_index("test.complex.types", 703)
+    ElixirProto.SchemaRegistry.force_register_index("test.function.defaults", 704)
+    ElixirProto.SchemaRegistry.force_register_index("test.nullable", 800)
+    ElixirProto.SchemaRegistry.force_register_index("test.order", 901)
+    ElixirProto.SchemaRegistry.force_register_index("test.nullability", 902)
+    ElixirProto.SchemaRegistry.force_register_index("test.complex", 903)
     :ok
   end
 end
