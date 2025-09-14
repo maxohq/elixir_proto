@@ -9,6 +9,8 @@
 
 A compact serialization library for Elixir that uses schema indices and fixed tuples for space-efficient binary serialization with schema evolution support.
 
+Here is a short pitch: [pitch](PITCH.md)
+
 ## Concept
 
 ElixirProto combines the robustness of Erlang's term serialization with space-efficient storage using two key optimizations:
