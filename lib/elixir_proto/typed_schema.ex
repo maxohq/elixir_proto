@@ -312,7 +312,7 @@ defmodule ElixirProto.TypedSchema do
     quote do
       # Generate struct with enforcement
       @enforce_keys unquote(enforce_keys)
-      defstruct unquote(sorted_fields)
+      defstruct unquote(Macro.escape(sorted_fields))
 
       # Generate type specification
       @type t() :: %__MODULE__{unquote_splicing(types)}
