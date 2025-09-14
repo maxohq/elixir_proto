@@ -43,16 +43,16 @@ defmodule ElixirProto.NestedStructTest do
 
   setup do
     # Reset registry for clean tests
-    ElixirProto.SchemaRegistry.reset!()
+    ElixirProto.SchemaNameRegistry.reset!()
 
     # Re-register test schemas (they auto-register during compilation)
-    ElixirProto.SchemaRegistry.force_register_index("nested.test.country", 100)
-    ElixirProto.SchemaRegistry.force_register_index("nested.test.address", 101)
-    ElixirProto.SchemaRegistry.force_register_index("nested.test.user", 102)
-    ElixirProto.SchemaRegistry.force_register_index("nested.test.company", 103)
-    ElixirProto.SchemaRegistry.force_register_index("nested.test.edge.user", 104)
-    ElixirProto.SchemaRegistry.force_register_index("nested.test.mixed.user", 105)
-    ElixirProto.SchemaRegistry.force_register_index("nested.test.tuple.user", 106)
+    ElixirProto.SchemaNameRegistry.force_register_index("nested.test.country", 100)
+    ElixirProto.SchemaNameRegistry.force_register_index("nested.test.address", 101)
+    ElixirProto.SchemaNameRegistry.force_register_index("nested.test.user", 102)
+    ElixirProto.SchemaNameRegistry.force_register_index("nested.test.company", 103)
+    ElixirProto.SchemaNameRegistry.force_register_index("nested.test.edge.user", 104)
+    ElixirProto.SchemaNameRegistry.force_register_index("nested.test.mixed.user", 105)
+    ElixirProto.SchemaNameRegistry.force_register_index("nested.test.tuple.user", 106)
 
     # Re-register in the main schema registry
     registry = %{

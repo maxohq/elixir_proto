@@ -3,11 +3,11 @@ defmodule ElixirProtoTest do
 
   setup do
     # Reset registry for clean tests but re-register test modules
-    ElixirProto.SchemaRegistry.reset!()
+    ElixirProto.SchemaNameRegistry.reset!()
 
     # Manually register test schemas since @after_compile already ran
-    ElixirProto.SchemaRegistry.force_register_index("myapp.ctx.user", 1)
-    ElixirProto.SchemaRegistry.force_register_index("myapp.ctx.post", 2)
+    ElixirProto.SchemaNameRegistry.force_register_index("myapp.ctx.user", 1)
+    ElixirProto.SchemaNameRegistry.force_register_index("myapp.ctx.post", 2)
 
     # Re-register in the main schema registry too
     registry = %{

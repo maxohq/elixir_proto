@@ -1,4 +1,4 @@
-defmodule ElixirProto.SchemaRegistry do
+defmodule ElixirProto.SchemaNameRegistry do
   @moduledoc """
   Global schema name → index registry for ultra-compact serialization.
 

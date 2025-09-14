@@ -13,7 +13,7 @@ defmodule UltraPost do
 end
 
 # Reset registry
-ElixirProto.SchemaRegistry.reset!()
+ElixirProto.SchemaNameRegistry.reset!()
 
 # Create test data
 full_user = %UltraUser{id: 1, name: "Alice", email: "alice@example.com", age: 30, active: true}
@@ -107,7 +107,7 @@ IO.puts("Match: #{full_user == decoded}")
 
 # Show registry state
 IO.puts("\n📋 SCHEMA REGISTRY:")
-registry = ElixirProto.SchemaRegistry.list_schemas()
+registry = ElixirProto.SchemaNameRegistry.list_schemas()
 Enum.each(registry, fn {name, index} ->
   IO.puts("  #{name} → #{index}")
 end)

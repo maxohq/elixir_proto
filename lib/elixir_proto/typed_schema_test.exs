@@ -457,18 +457,18 @@ defmodule ElixirProto.TypedSchemaTest do
   # Reset registry before each test to avoid conflicts
   setup do
     # Reset registry for clean tests
-    ElixirProto.SchemaRegistry.reset!()
+    ElixirProto.SchemaNameRegistry.reset!()
 
     # Re-register test schemas
-    ElixirProto.SchemaRegistry.force_register_index("test.basic.user", 500)
-    ElixirProto.SchemaRegistry.force_register_index("test.enforced.product", 501)
-    ElixirProto.SchemaRegistry.force_register_index("test.defaults.struct", 502)
-    ElixirProto.SchemaRegistry.force_register_index("test.complex.types", 703)
-    ElixirProto.SchemaRegistry.force_register_index("test.function.defaults", 704)
-    ElixirProto.SchemaRegistry.force_register_index("test.nullable", 800)
-    ElixirProto.SchemaRegistry.force_register_index("test.order", 901)
-    ElixirProto.SchemaRegistry.force_register_index("test.nullability", 902)
-    ElixirProto.SchemaRegistry.force_register_index("test.complex", 903)
+    ElixirProto.SchemaNameRegistry.force_register_index("test.basic.user", 500)
+    ElixirProto.SchemaNameRegistry.force_register_index("test.enforced.product", 501)
+    ElixirProto.SchemaNameRegistry.force_register_index("test.defaults.struct", 502)
+    ElixirProto.SchemaNameRegistry.force_register_index("test.complex.types", 703)
+    ElixirProto.SchemaNameRegistry.force_register_index("test.function.defaults", 704)
+    ElixirProto.SchemaNameRegistry.force_register_index("test.nullable", 800)
+    ElixirProto.SchemaNameRegistry.force_register_index("test.order", 901)
+    ElixirProto.SchemaNameRegistry.force_register_index("test.nullability", 902)
+    ElixirProto.SchemaNameRegistry.force_register_index("test.complex", 903)
     :ok
   end
 end

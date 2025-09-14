@@ -26,7 +26,7 @@ defmodule ElixirProto.TypedSchema do
 
     quote do
       # Register with schema registry
-      ElixirProto.SchemaRegistry.force_register_index(unquote(schema_name), unquote(schema_index))
+      ElixirProto.SchemaNameRegistry.force_register_index(unquote(schema_name), unquote(schema_index))
 
       # Import typedschema macro
       import ElixirProto.TypedSchema, only: [typedschema: 1, typedschema: 2, field: 2, field: 3]

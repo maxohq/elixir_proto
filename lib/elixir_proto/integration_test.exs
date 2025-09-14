@@ -53,15 +53,15 @@ defmodule ElixirProto.IntegrationTest do
 
   # Reset registry and register schemas for each test
   setup do
-    ElixirProto.SchemaRegistry.reset!()
+    ElixirProto.SchemaNameRegistry.reset!()
 
     # Register all test schemas in both SchemaRegistry and Schema.Registry
-    ElixirProto.SchemaRegistry.force_register_index("integration.typed.user", 1000)
-    ElixirProto.SchemaRegistry.force_register_index("integration.schema.user", 1001)
-    ElixirProto.SchemaRegistry.force_register_index("integration.typed.address", 1100)
-    ElixirProto.SchemaRegistry.force_register_index("integration.typed.user.address", 1101)
-    ElixirProto.SchemaRegistry.force_register_index("integration.mixed.user", 1200)
-    ElixirProto.SchemaRegistry.force_register_index("integration.data.types", 1300)
+    ElixirProto.SchemaNameRegistry.force_register_index("integration.typed.user", 1000)
+    ElixirProto.SchemaNameRegistry.force_register_index("integration.schema.user", 1001)
+    ElixirProto.SchemaNameRegistry.force_register_index("integration.typed.address", 1100)
+    ElixirProto.SchemaNameRegistry.force_register_index("integration.typed.user.address", 1101)
+    ElixirProto.SchemaNameRegistry.force_register_index("integration.mixed.user", 1200)
+    ElixirProto.SchemaNameRegistry.force_register_index("integration.data.types", 1300)
 
     # Manually call the registration for TypedSchema modules since @after_compile
     # hook already ran during compilation
@@ -268,8 +268,8 @@ defmodule ElixirProto.IntegrationTest do
 
     test "schema registry integration works correctly" do
       # Verify schemas are registered correctly
-      assert ElixirProto.SchemaRegistry.get_index("integration.typed.user") == 1000
-      assert ElixirProto.SchemaRegistry.get_name(1000) == "integration.typed.user"
+      assert ElixirProto.SchemaNameRegistry.get_index("integration.typed.user") == 1000
+      assert ElixirProto.SchemaNameRegistry.get_name(1000) == "integration.typed.user"
 
       # Verify Schema.Registry integration
       schema_info = ElixirProto.Schema.Registry.get_schema("integration.typed.user")
@@ -315,7 +315,7 @@ defmodule ElixirProto.IntegrationTest do
   end
 
   test "TypedSchema supports various Elixir data types" do
-    ElixirProto.SchemaRegistry.force_register_index("integration.data.types", 1300)
+    ElixirProto.SchemaNameRegistry.force_register_index("integration.data.types", 1300)
     # Also register with Schema.Registry manually
     ElixirProto.Schema.Registry.register_schema(%{module: TypedDataTypes}, nil)
 

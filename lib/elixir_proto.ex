@@ -8,7 +8,7 @@ defmodule ElixirProto do
   """
 
   alias ElixirProto.Schema.Registry
-  alias ElixirProto.SchemaRegistry
+  alias ElixirProto.SchemaNameRegistry
 
   @doc """
   Encode a struct to compressed binary format.
@@ -45,7 +45,7 @@ defmodule ElixirProto do
     max_fields = length(schema.fields)
 
     # Get schema index (must be pre-registered)
-    schema_index = SchemaRegistry.get_index(schema_name)
+    schema_index = SchemaNameRegistry.get_index(schema_name)
 
     if schema_index == nil do
       raise ArgumentError,
@@ -106,7 +106,7 @@ defmodule ElixirProto do
       |> :erlang.binary_to_term()
 
     # Look up schema name by index
-    schema_name = SchemaRegistry.get_name(schema_index)
+    schema_name = SchemaNameRegistry.get_name(schema_index)
 
     if schema_name == nil do
       raise ArgumentError,
@@ -151,7 +151,7 @@ defmodule ElixirProto do
       schema ->
         # This is a nested ElixirProto struct - encode it compactly
         schema_name = schema.module.__schema__(:name)
-        nested_schema_index = SchemaRegistry.get_index(schema_name)
+        nested_schema_index = SchemaNameRegistry.get_index(schema_name)
 
         if nested_schema_index == nil do
           # Schema not registered, keep as regular struct
@@ -184,7 +184,7 @@ defmodule ElixirProto do
   @doc false
   # Helper function to decode field values, detecting nested ElixirProto markers
   defp decode_field_value({:ep, schema_index, values_tuple}) do
-    case SchemaRegistry.get_name(schema_index) do
+    case SchemaNameRegistry.get_name(schema_index) do
       nil ->
         # Invalid schema index - treat as literal tuple data
         {:ep, schema_index, values_tuple}

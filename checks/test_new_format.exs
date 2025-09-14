@@ -5,7 +5,7 @@
 alias ElixirProtoTest.User
 
 # Reset schema registry for clean test
-ElixirProto.SchemaRegistry.reset!()
+ElixirProto.SchemaNameRegistry.reset!()
 
 # Create test data
 full_user = %User{id: 1, name: "Alice", email: "alice@example.com", age: 30, active: true}
@@ -28,7 +28,7 @@ try do
   IO.puts("Sparse user encoded size: #{byte_size(encoded_sparse)} bytes")
 
   # Check what the registry assigned
-  registry_stats = ElixirProto.SchemaRegistry.stats()
+  registry_stats = ElixirProto.SchemaNameRegistry.stats()
   IO.puts("\n📋 Schema Registry:")
   IO.inspect(registry_stats.schemas)
 

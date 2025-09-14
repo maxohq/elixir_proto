@@ -110,16 +110,16 @@ defmodule ElixirProto.Schema.Registry do
   end
 
   defp register_explicit_index(schema_name, explicit_index) do
-    alias ElixirProto.SchemaRegistry
+    alias ElixirProto.SchemaNameRegistry
 
     # Check if index is already taken
-    existing_name = SchemaRegistry.get_name(explicit_index)
+    existing_name = SchemaNameRegistry.get_name(explicit_index)
 
     cond do
       existing_name == nil ->
         # Index is available, register it
         # First check if schema already has a different index
-        current_index = SchemaRegistry.get_index(schema_name)
+        current_index = SchemaNameRegistry.get_index(schema_name)
 
         if current_index && current_index != explicit_index do
           raise CompileError,
@@ -128,7 +128,7 @@ defmodule ElixirProto.Schema.Registry do
         end
 
         # Force registration with specific index
-        SchemaRegistry.force_register_index(schema_name, explicit_index)
+        SchemaNameRegistry.force_register_index(schema_name, explicit_index)
 
       existing_name == schema_name ->
         # Same schema, same index - OK
