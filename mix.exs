@@ -39,6 +39,7 @@ defmodule ElixirProto.MixProject do
   defp deps do
     [
       {:ex_doc, "~> 0.29", only: :dev, runtime: false},
+      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
       {:maxo_test_iex, "~> 0.1", only: [:test]},
       {:benchee, "~> 1.0", only: :dev}
     ]
