@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.1.2] - 2025-09-14
+
+### Breaking Changes
+- Removed `SchemaRegistry.get_or_create_index/1` function - all schema indices must be explicitly assigned
+- Schema registration now strictly requires explicit index parameter - automatic index assignment removed
+- `ElixirProto.encode/1` now uses read-only `get_index/1` instead of `get_or_create_index/1`
+
+### Changed
+- Schema compilation now throws clear error for missing index parameter
+- Improved error messages for missing schema indices during encoding
+
 ## [0.1.1] - 2025-09-14
 
 ### Fixed
