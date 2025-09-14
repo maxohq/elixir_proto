@@ -25,7 +25,7 @@ defmodule ElixirProtoTest do
       }
     }
 
-    :persistent_term.put({ElixirProto.Schema.Registry, :schemas}, registry)
+    :persistent_term.put({ElixirProto.SchemaRegistry, :schemas}, registry)
 
     :ok
   end

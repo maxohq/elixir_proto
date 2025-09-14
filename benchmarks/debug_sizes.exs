@@ -36,7 +36,7 @@ IO.puts("\n📊 FULL USER ANALYSIS")
 IO.inspect(full_user, label: "Original struct")
 
 # ElixirProto process
-schema = ElixirProto.Schema.Registry.get_schema_by_module(DebugUser)
+schema = ElixirProto.SchemaRegistry.get_schema_by_module(DebugUser)
 IO.inspect(schema.field_indices, label: "Field indices")
 
 # Manual ElixirProto process to see intermediate steps

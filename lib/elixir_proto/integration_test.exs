@@ -55,7 +55,7 @@ defmodule ElixirProto.IntegrationTest do
   setup do
     ElixirProto.SchemaNameRegistry.reset!()
 
-    # Register all test schemas in both SchemaRegistry and Schema.Registry
+    # Register all test schemas in both SchemaRegistry and SchemaRegistry
     ElixirProto.SchemaNameRegistry.force_register_index("integration.typed.user", 1000)
     ElixirProto.SchemaNameRegistry.force_register_index("integration.schema.user", 1001)
     ElixirProto.SchemaNameRegistry.force_register_index("integration.typed.address", 1100)
@@ -65,12 +65,12 @@ defmodule ElixirProto.IntegrationTest do
 
     # Manually call the registration for TypedSchema modules since @after_compile
     # hook already ran during compilation
-    ElixirProto.Schema.Registry.register_schema(%{module: SimpleTypedUser}, nil)
-    ElixirProto.Schema.Registry.register_schema(%{module: SimpleSchemaUser}, nil)
-    ElixirProto.Schema.Registry.register_schema(%{module: TypedAddress}, nil)
-    ElixirProto.Schema.Registry.register_schema(%{module: TypedUserWithAddress}, nil)
-    ElixirProto.Schema.Registry.register_schema(%{module: MixedUser}, nil)
-    ElixirProto.Schema.Registry.register_schema(%{module: TypedDataTypes}, nil)
+    ElixirProto.SchemaRegistry.register_schema(%{module: SimpleTypedUser}, nil)
+    ElixirProto.SchemaRegistry.register_schema(%{module: SimpleSchemaUser}, nil)
+    ElixirProto.SchemaRegistry.register_schema(%{module: TypedAddress}, nil)
+    ElixirProto.SchemaRegistry.register_schema(%{module: TypedUserWithAddress}, nil)
+    ElixirProto.SchemaRegistry.register_schema(%{module: MixedUser}, nil)
+    ElixirProto.SchemaRegistry.register_schema(%{module: TypedDataTypes}, nil)
 
     :ok
   end
@@ -271,8 +271,8 @@ defmodule ElixirProto.IntegrationTest do
       assert ElixirProto.SchemaNameRegistry.get_index("integration.typed.user") == 1000
       assert ElixirProto.SchemaNameRegistry.get_name(1000) == "integration.typed.user"
 
-      # Verify Schema.Registry integration
-      schema_info = ElixirProto.Schema.Registry.get_schema("integration.typed.user")
+      # Verify SchemaRegistry integration
+      schema_info = ElixirProto.SchemaRegistry.get_schema("integration.typed.user")
       assert schema_info != nil
       assert schema_info.module == SimpleTypedUser
       assert schema_info.fields == [:id, :name, :email]
@@ -316,8 +316,8 @@ defmodule ElixirProto.IntegrationTest do
 
   test "TypedSchema supports various Elixir data types" do
     ElixirProto.SchemaNameRegistry.force_register_index("integration.data.types", 1300)
-    # Also register with Schema.Registry manually
-    ElixirProto.Schema.Registry.register_schema(%{module: TypedDataTypes}, nil)
+    # Also register with SchemaRegistry manually
+    ElixirProto.SchemaRegistry.register_schema(%{module: TypedDataTypes}, nil)
 
     data = %TypedDataTypes{
       string_field: "test string",

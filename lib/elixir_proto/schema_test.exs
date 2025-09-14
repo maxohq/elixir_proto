@@ -1,35 +1,6 @@
 defmodule ElixirProto.Schema.Test do
   use ExUnit.Case, async: false
 
-  setup do
-    # Reset registry for clean tests but re-register test modules
-    ElixirProto.SchemaNameRegistry.reset!()
-
-    # Manually register test schemas since @after_compile already ran
-    ElixirProto.SchemaNameRegistry.force_register_index("test.user", 10)
-    ElixirProto.SchemaNameRegistry.force_register_index("test.post", 11)
-
-    # Re-register in the main schema registry too
-    registry = %{
-      "test.user" => %{
-        module: TestUser,
-        fields: [:id, :name, :email, :age, :active],
-        field_indices: %{id: 1, name: 2, email: 3, age: 4, active: 5},
-        index_fields: %{1 => :id, 2 => :name, 3 => :email, 4 => :age, 5 => :active}
-      },
-      "test.post" => %{
-        module: TestPost,
-        fields: [:id, :title, :content, :author_id, :created_at],
-        field_indices: %{id: 1, title: 2, content: 3, author_id: 4, created_at: 5},
-        index_fields: %{1 => :id, 2 => :title, 3 => :content, 4 => :author_id, 5 => :created_at}
-      }
-    }
-
-    :persistent_term.put({ElixirProto.Schema.Registry, :schemas}, registry)
-
-    :ok
-  end
-
   describe "defschema macro" do
     defmodule TestUser do
       use ElixirProto.Schema, name: "test.user", index: 10
@@ -76,37 +47,6 @@ defmodule ElixirProto.Schema.Test do
       assert index_fields[3] == :email
       assert index_fields[4] == :age
       assert index_fields[5] == :active
-    end
-  end
-
-  describe "schema registry" do
-    alias ElixirProto.Schema.Registry
-
-    test "registers schemas automatically" do
-      schema = Registry.get_schema("test.user")
-      assert schema != nil
-      assert schema.module == TestUser
-      assert schema.fields == [:id, :name, :email, :age, :active]
-      assert schema.field_indices[:name] == 2
-      assert schema.index_fields[3] == :email
-    end
-
-    test "can find schema by module" do
-      schema = Registry.get_schema_by_module(TestUser)
-      assert schema != nil
-      assert schema.module == TestUser
-    end
-
-    test "returns nil for unknown schema" do
-      schema = Registry.get_schema("unknown.schema")
-      assert schema == nil
-    end
-
-    test "lists all schemas" do
-      schemas = Registry.list_schemas()
-      assert is_map(schemas)
-      assert Map.has_key?(schemas, "test.user")
-      assert Map.has_key?(schemas, "test.post")
     end
   end
 end

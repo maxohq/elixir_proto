@@ -26,7 +26,10 @@ defmodule ElixirProto.TypedSchema do
 
     quote do
       # Register with schema registry
-      ElixirProto.SchemaNameRegistry.force_register_index(unquote(schema_name), unquote(schema_index))
+      ElixirProto.SchemaNameRegistry.force_register_index(
+        unquote(schema_name),
+        unquote(schema_index)
+      )
 
       # Import typedschema macro
       import ElixirProto.TypedSchema, only: [typedschema: 1, typedschema: 2, field: 2, field: 3]
@@ -332,7 +335,7 @@ defmodule ElixirProto.TypedSchema do
       def __schema_index__(), do: unquote(schema_index)
 
       # Register with main schema registry for serialization using after_compile hook
-      @after_compile {ElixirProto.Schema.Registry, :register_schema}
+      @after_compile {ElixirProto.SchemaRegistry, :register_schema}
     end
   end
 end

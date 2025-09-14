@@ -7,7 +7,7 @@ defmodule ElixirProto do
   field indices and uses schema information during deserialization.
   """
 
-  alias ElixirProto.Schema.Registry
+  alias ElixirProto.SchemaRegistry
   alias ElixirProto.SchemaNameRegistry
 
   @doc """
@@ -34,7 +34,7 @@ defmodule ElixirProto do
 
   """
   def encode(%module{} = struct) do
-    schema = Registry.get_schema_by_module(module)
+    schema = SchemaRegistry.get_schema_by_module(module)
 
     if schema == nil do
       raise ArgumentError,
@@ -114,7 +114,7 @@ defmodule ElixirProto do
     end
 
     # Look up schema by name
-    schema = Registry.get_schema(schema_name)
+    schema = SchemaRegistry.get_schema(schema_name)
 
     if schema == nil do
       raise ArgumentError,
@@ -143,7 +143,7 @@ defmodule ElixirProto do
   @doc false
   # Helper function to encode field values, detecting nested ElixirProto structs
   defp encode_field_value(%module{} = nested_struct) do
-    case Registry.get_schema_by_module(module) do
+    case SchemaRegistry.get_schema_by_module(module) do
       nil ->
         # Not an ElixirProto struct, keep as-is
         nested_struct
@@ -190,7 +190,7 @@ defmodule ElixirProto do
         {:ep, schema_index, values_tuple}
 
       schema_name ->
-        case Registry.get_schema(schema_name) do
+        case SchemaRegistry.get_schema(schema_name) do
           nil ->
             # Schema not found - treat as literal tuple data
             {:ep, schema_index, values_tuple}

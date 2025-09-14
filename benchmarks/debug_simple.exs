@@ -21,7 +21,7 @@ defmodule SimpleDebugger do
     IO.puts(String.duplicate("=", 60))
 
 # Let's break down what ElixirProto is actually storing
-schema = ElixirProto.Schema.Registry.get_schema_by_module(SimpleUser)
+schema = ElixirProto.SchemaRegistry.get_schema_by_module(SimpleUser)
 schema_name = "simple.user"  # from our test module
 
 IO.puts("\n📊 ANALYZING SERIALIZED DATA STRUCTURES")
