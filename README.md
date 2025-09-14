@@ -119,6 +119,114 @@ ElixirProto.SchemaRegistry.get_name(1)
 # => "myapp.ctx.user"
 ```
 
+## Nested Struct Serialization
+
+ElixirProto supports automatic nested struct serialization with unlimited nesting depth. When a struct field contains another ElixirProto struct, it's automatically encoded using a special compact format.
+
+### Basic Nested Structures
+
+```elixir
+defmodule Country do
+  use ElixirProto.Schema, name: "myapp.country", index: 3
+  defschema [:name, :code]
+end
+
+defmodule Address do
+  use ElixirProto.Schema, name: "myapp.address", index: 4
+  defschema [:street, :city, :country]  # country field will hold a Country struct
+end
+
+defmodule User do
+  use ElixirProto.Schema, name: "myapp.user", index: 5
+  defschema [:id, :name, :address]  # address field will hold an Address struct
+end
+
+# Create nested structure
+country = %Country{name: "USA", code: "US"}
+address = %Address{street: "123 Main St", city: "Portland", country: country}
+user = %User{id: 1, name: "Alice", address: address}
+
+# Serialize and deserialize - nesting handled automatically
+encoded = ElixirProto.encode(user)
+decoded = ElixirProto.decode(encoded)
+
+# Access nested data
+decoded.address.country.name  # => "USA"
+```
+
+### Multi-Level Nesting
+
+ElixirProto supports unlimited nesting depth:
+
+```elixir
+defmodule Company do
+  use ElixirProto.Schema, name: "myapp.company", index: 6
+  defschema [:name, :address, :ceo]  # ceo field holds a User struct
+end
+
+# Three levels deep: Company -> User -> Address -> Country
+company = %Company{name: "ACME Corp", address: address, ceo: user}
+
+encoded = ElixirProto.encode(company)
+decoded = ElixirProto.decode(encoded)
+
+# Access deeply nested data
+decoded.ceo.address.country.code  # => "US"
+```
+
+### Nested Encoding Format
+
+Nested ElixirProto structs use the internal format `{:ep, schema_index, values_tuple}`:
+
+```elixir
+# When encoding this nested structure:
+%User{id: 1, name: "Alice", address: %Address{street: "123 Main St", city: "Portland", country: nil}}
+
+# The internal format becomes:
+{5, {1, "Alice", {:ep, 4, {"123 Main St", "Portland", nil}}}}
+#    ^user index    ^address as {:ep, address_index, address_values}
+```
+
+### Mixed Data Types
+
+ElixirProto gracefully handles mixed scenarios:
+
+```elixir
+defmodule RegularStruct do
+  defstruct [:field1, :field2]  # Regular Elixir struct (not ElixirProto)
+end
+
+defmodule MixedUser do
+  use ElixirProto.Schema, name: "myapp.mixed_user", index: 7
+  defschema [:id, :name, :regular_data, :proto_address]
+end
+
+# Mix regular structs and ElixirProto structs
+mixed = %MixedUser{
+  id: 1,
+  name: "Bob",
+  regular_data: %RegularStruct{field1: "value1", field2: "value2"},  # Preserved as-is
+  proto_address: address  # ElixirProto struct, gets nested encoding
+}
+
+encoded = ElixirProto.encode(mixed)
+decoded = ElixirProto.decode(encoded)
+
+# Regular struct preserved unchanged
+decoded.regular_data.__struct__  # => RegularStruct
+
+# ElixirProto struct properly nested
+decoded.proto_address.__struct__  # => Address
+```
+
+### Key Features
+
+- **Automatic Detection**: ElixirProto automatically detects nested ElixirProto structs
+- **Unlimited Depth**: Supports arbitrarily deep nesting
+- **Mixed Compatibility**: Works alongside regular Elixir structs
+- **Space Efficiency**: Nested structs use compact schema indices instead of full module names
+- **Error Resilience**: Gracefully handles edge cases like literal `{:ep, index, tuple}` data
+
 ## Implementation Architecture
 
 ### Core Components

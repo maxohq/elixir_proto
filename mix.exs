@@ -1,7 +1,7 @@
 defmodule ElixirProto.MixProject do
   use Mix.Project
 
-  @version "0.1.2"
+  @version "0.1.3"
   @source_url "https://github.com/maxohq/elixir_proto"
 
   def project do

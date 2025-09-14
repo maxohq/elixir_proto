@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.1.3] - 2025-09-14
+
+### Added
+- **Nested struct serialization support** with unlimited nesting depth
+- Automatic detection and encoding of nested ElixirProto structs using `{:ep, schema_index, values_tuple}` format
+- Recursive encoding/decoding with `encode_field_value/1` and `decode_field_value/1` helper functions
+- Graceful handling of mixed data types (ElixirProto structs alongside regular Elixir structs)
+- Comprehensive test suite with 11 test cases covering 2-level nesting, 3-level nesting, edge cases, and performance validation
+- Error resilience for edge cases including literal `{:ep, index, tuple}` data that looks like nested format
+
+### Changed
+- Enhanced `ElixirProto.encode/1` to recursively detect and encode nested ElixirProto structs
+- Enhanced `ElixirProto.decode/1` to recursively reconstruct nested struct hierarchies
+- Test modules moved into test module scope to avoid global namespace pollution
+
 ## [0.1.2] - 2025-09-14
 
 ### Breaking Changes
