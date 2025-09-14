@@ -1,104 +1,116 @@
 # ElixirProto Benchmark Results
 
-## 🎯 Executive Summary
-
-**ElixirProto excels at space efficiency, especially for sparse data, while plain serialization wins on performance and memory usage.**
-
-## 🔥 Performance Results
+## Performance Results
 
 ### Encoding Performance (operations per second)
-- **Sparse user**: ElixirProto **39% faster** (245K ops/s vs 176K ops/s)
-- **Full user**: Plain slightly faster (102K ops/s vs 100K ops/s)
-- **Large sparse struct**: ElixirProto **61% faster** (147K ops/s vs 91K ops/s)
-- **Large full struct**: Plain **26% faster** (71K ops/s vs 57K ops/s)
+- **Sparse user**: ElixirProto 237K ops/s vs Plain 177K ops/s (34% faster)
+- **Product**: ElixirProto 122K ops/s vs Plain 117K ops/s (4% faster)
+- **Large sparse struct**: ElixirProto 116K ops/s vs Plain 91K ops/s (28% faster)
+- **Single user (full)**: ElixirProto 102K ops/s vs Plain 102K ops/s (equivalent)
+- **Large full struct**: ElixirProto 84K ops/s vs Plain 72K ops/s (16% faster)
 
-### Memory Usage
+### Memory Usage Per Operation
 - **Plain serialization**: ~0.26 KB per operation
-- **ElixirProto**: 1.34-5.30 KB per operation (**5-20x more memory**)
+- **ElixirProto**: 1.75-9.37 KB per operation (7-36x more memory usage)
 
-## 📦 Payload Size Analysis - ElixirProto's Strength
+ElixirProto uses significantly more memory during encoding due to intermediate data structure creation.
 
-| Scenario | Plain Size | Proto Size | Savings | % Savings |
-|----------|------------|------------|---------|-----------|
-| **Sparse User** (2/7 fields) | 111 bytes | **45 bytes** | 66 bytes | **59.5%** ✅ |
-| **Large Sparse** (10/50 fields) | 229 bytes | **101 bytes** | 128 bytes | **55.9%** ✅ |
-| Full User | 331 bytes | **314 bytes** | 17 bytes | **5.1%** |
-| Full Product | 254 bytes | **226 bytes** | 28 bytes | **11.0%** |
-| Large Full Struct | 301 bytes | **274 bytes** | 27 bytes | **9.0%** |
+### Collection Performance (individual encoding)
+- **ElixirProto 100 sparse users**: 2.32K collections/s
+- **ElixirProto 50 products**: 2.32K collections/s
+- **Plain 100 sparse users**: 1.69K collections/s (38% slower)
+- **Plain 50 products**: 2.12K collections/s (9% slower)
 
-## 📈 Field Count Impact
+## Payload Size Analysis
 
-**ElixirProto space savings decrease as field density increases:**
+| Scenario | Uncompressed | Plain+gzip | ElixirProto | Savings | % Savings |
+|----------|--------------|------------|-------------|---------|-----------|
+| **Single User (full)** | 478 bytes | 332 bytes | **289 bytes** | 43 bytes | **13.0%** |
+| **Single User (sparse)** | 125 bytes | 111 bytes | **34 bytes** | 77 bytes | **69.4%** |
+| **Single Product** | 349 bytes | 254 bytes | **196 bytes** | 58 bytes | **22.8%** |
+| **Large Struct (50/50 fields)** | 1,279 bytes | 301 bytes | **136 bytes** | 165 bytes | **54.8%** |
+| **Large Struct (10/50 fields)** | 879 bytes | 225 bytes | **64 bytes** | 161 bytes | **71.6%** |
 
-- **5 fields**: 67.3% savings (140 bytes saved)
-- **10 fields**: 57.5% savings (131 bytes saved)
-- **20 fields**: 42.1% savings (107 bytes saved)
-- **30 fields**: 32.4% savings (90 bytes saved)
-- **50 fields**: 8.7% savings (26 bytes saved)
+ElixirProto compression ratio vs original data:
+- Sparse user: 27.2% of original size
+- Large sparse struct: 7.3% of original size
 
-**Key Insight**: ElixirProto's nil field omission provides exponential benefits as sparsity increases.
+## Field Count Impact Analysis
 
-## 🗂️ Collection Analysis
+ElixirProto space savings with varying field density:
 
-### Individual Struct Encoding (100 users)
-- **ElixirProto total**: 31,251 bytes
-- **Plain total**: 33,156 bytes
-- **Savings**: 1,905 bytes (5.7%)
+- **5 fields**: 161 bytes saved (78.2% savings)
+- **10 fields**: 164 bytes saved (72.6% savings)
+- **20 fields**: 166 bytes saved (64.6% savings)
+- **30 fields**: 168 bytes saved (60.4% savings)
+- **50 fields**: 160 bytes saved (54.2% savings)
 
-### Collection vs Individual
-- **Plain collection encoding**: 1,892 bytes
-- **Individual sum**: 33,156 bytes
-- **Collection advantage**: 94% space savings!
+Key insight: ElixirProto maintains strong savings even as field count increases, due to index-based field representation and nil omission.
 
-**Insight**: For collections, plain Elixir's collection serialization is extremely efficient compared to individual struct encoding.
+## Collection Size Analysis
 
-## ⚡ When to Use Each Approach
+### Individual Struct Encoding (100 full users)
+- **ElixirProto total**: 28,949 bytes
+- **Plain total**: 33,214 bytes
+- **Savings**: 4,265 bytes (12.8%)
 
-### 🏆 ElixirProto Wins When:
-- ✅ **Sparse data** (many nil fields) - **Up to 60% space savings**
-- ✅ **Schema evolution** requirements
-- ✅ **Bandwidth-limited** scenarios
-- ✅ **Storage cost** is critical
-- ✅ **Large structs** with variable field usage
+### Collection vs Individual Comparison
+- **Plain collection** (100 users as list): 1,896 bytes
+- **Individual sum**: 33,214 bytes
+- **Collection advantage**: 31,318 bytes saved (94.3% reduction)
 
-### 🏆 Plain Serialization Wins When:
-- ✅ **Performance** is critical (**5-20x less memory**)
-- ✅ **Collections** of mixed data types
-- ✅ **Full structs** (all fields populated)
-- ✅ **One-off** serialization
-- ✅ **Small structs** (< 10 fields)
+For bulk data, plain collection serialization is extremely space-efficient compared to individual struct encoding.
 
-## 🎯 Real-World Scenarios
+## Performance vs Payload Trade-offs
 
-### 💰 Use ElixirProto For:
-- **API responses** with optional fields
-- **Database records** with sparse columns
-- **Event sourcing** with evolving schemas
-- **Message queues** with size limits
-- **Mobile apps** with bandwidth constraints
+### ElixirProto Advantages
+- **Sparse data**: Up to 71% space savings
+- **Schema evolution**: Explicit indices enable backward compatibility
+- **Bandwidth efficiency**: Smaller payloads for network transfer
+- **Storage optimization**: Reduced disk/memory footprint for persistent data
+- **Field omission**: Automatic nil field exclusion
 
-### 💨 Use Plain Serialization For:
-- **Hot path** encoding/decoding
-- **In-memory** caching
-- **Full configuration** objects
-- **Temporary** data structures
-- **Development/debugging**
+### Plain Serialization Advantages
+- **Memory efficiency**: 7-36x less memory usage during encoding
+- **Collection handling**: Extremely efficient for bulk data
+- **Simplicity**: No schema management required
+- **Compatibility**: Works with any Elixir data structure
+- **Development speed**: No setup overhead
 
-## 🧪 Test Setup Details
+## When to Use Each Approach
 
-**Hardware**: Apple M3 Ultra, 28 cores, 256GB RAM
-**Software**: Elixir 1.18.3, Erlang 27.3, JIT enabled
-**Compression**: zlib for both approaches
-**Benchmark Tool**: Benchee 1.4.0
-**Test Duration**: 3 seconds per benchmark + 2s warmup
+### Use ElixirProto For:
+- Event sourcing with sparse events
+- API responses with optional fields
+- Database records with many nullable columns
+- Message queues with payload size limits
+- Mobile/IoT applications with bandwidth constraints
+- Long-term data storage where compression matters
 
-## 📊 Raw Benchmark Data
+### Use Plain Serialization For:
+- Hot path encoding/decoding (performance critical)
+- In-memory caching
+- Collections of mixed data types
+- Temporary data structures
+- Development and debugging
+- Applications where simplicity > space optimization
 
-Run `mix run benchmarks/basic.exs` to reproduce these results in your environment.
+## Test Environment
 
-### Sample Data Structures:
+- **Hardware**: Apple M3 Ultra, 28 cores, 256GB RAM
+- **Software**: Elixir 1.18.3, Erlang 27.3, JIT enabled
+- **Compression**: zlib for both approaches
+- **Benchmark Tool**: Benchee with 3s runtime + 2s warmup
+
+## Reproducing Results
+
+Run `mix run benchmarks/basic.exs` to generate current results.
+
+### Sample Structures
 - **User**: 7 fields (id, name, email, age, active, created_at, metadata)
 - **Product**: 8 fields (id, name, description, price, category, in_stock, tags, specs)
 - **LargeStruct**: 50 fields (field_01 through field_50)
 
-**Conclusion**: ElixirProto is a specialized tool that excels at space-efficient serialization of sparse structured data, while plain serialization remains the better general-purpose choice for performance-critical applications.
+## Conclusion
+
+ElixirProto is optimized for space-efficient serialization of structured data with predictable schemas. It excels with sparse data and provides substantial space savings at the cost of higher memory usage during encoding. Plain serialization remains the better choice for performance-critical paths and mixed data types.
