@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.1.7] - 2025-01-18
+## [0.2.0] - 2025-01-18
 
 ### Breaking Changes
 - Replaced global schema index management with context-scoped PayloadConverter approach
