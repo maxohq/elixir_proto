@@ -33,42 +33,42 @@ Formatting results...
 *** 🔥 ENCODING PERFORMANCE ***
 
 Name                                               ips        average  deviation         median         99th %
-ElixirProto.encode sparse user                240.83 K        4.15 μs   ±145.01%        3.75 μs        8.13 μs
-Plain.encode sparse user                      173.83 K        5.75 μs   ±155.72%        5.25 μs        9.04 μs
-ElixirProto.encode product                    120.66 K        8.29 μs    ±69.52%        7.42 μs       22.29 μs
-Plain.encode product                          116.71 K        8.57 μs    ±57.60%        8.17 μs       12.79 μs
-ElixirProto.encode large struct (sparse)      112.51 K        8.89 μs    ±64.91%        8.38 μs       18.50 μs
-ElixirProto.encode single user (full)         101.75 K        9.83 μs    ±51.07%        9.42 μs       17.92 μs
-Plain.encode single user (full)               101.47 K        9.86 μs    ±45.97%        9.50 μs       13.54 μs
-Plain.encode large struct (sparse)             90.52 K       11.05 μs    ±39.93%       10.67 μs       17.08 μs
-ElixirProto.encode large struct (full)         83.06 K       12.04 μs    ±21.96%       11.46 μs       22.29 μs
-Plain.encode large struct (full)               71.70 K       13.95 μs    ±38.06%       13.50 μs       25.83 μs
+ElixirProto.encode sparse user                252.87 K        3.95 μs   ±241.80%        3.46 μs        6.96 μs
+Plain.encode sparse user                      176.40 K        5.67 μs   ±148.66%        5.21 μs        6.75 μs
+ElixirProto.encode large struct (sparse)      157.86 K        6.33 μs    ±72.04%        5.88 μs       10.46 μs
+ElixirProto.encode product                    135.80 K        7.36 μs    ±68.65%        7.04 μs        9.54 μs
+Plain.encode product                          117.40 K        8.52 μs    ±72.16%        8.17 μs       10.42 μs
+ElixirProto.encode single user (full)         106.09 K        9.43 μs    ±65.20%        9.08 μs       13.25 μs
+ElixirProto.encode large struct (full)        105.63 K        9.47 μs    ±55.19%           9 μs       16.54 μs
+Plain.encode single user (full)               101.40 K        9.86 μs    ±55.01%        9.54 μs       13.01 μs
+Plain.encode large struct (sparse)             90.36 K       11.07 μs    ±46.24%       10.71 μs       16.33 μs
+Plain.encode large struct (full)               72.84 K       13.73 μs    ±34.18%       13.38 μs       22.97 μs
 
 Comparison: 
-ElixirProto.encode sparse user                240.83 K
-Plain.encode sparse user                      173.83 K - 1.39x slower +1.60 μs
-ElixirProto.encode product                    120.66 K - 2.00x slower +4.14 μs
-Plain.encode product                          116.71 K - 2.06x slower +4.42 μs
-ElixirProto.encode large struct (sparse)      112.51 K - 2.14x slower +4.74 μs
-ElixirProto.encode single user (full)         101.75 K - 2.37x slower +5.68 μs
-Plain.encode single user (full)               101.47 K - 2.37x slower +5.70 μs
-Plain.encode large struct (sparse)             90.52 K - 2.66x slower +6.90 μs
-ElixirProto.encode large struct (full)         83.06 K - 2.90x slower +7.89 μs
-Plain.encode large struct (full)               71.70 K - 3.36x slower +9.79 μs
+ElixirProto.encode sparse user                252.87 K
+Plain.encode sparse user                      176.40 K - 1.43x slower +1.71 μs
+ElixirProto.encode large struct (sparse)      157.86 K - 1.60x slower +2.38 μs
+ElixirProto.encode product                    135.80 K - 1.86x slower +3.41 μs
+Plain.encode product                          117.40 K - 2.15x slower +4.56 μs
+ElixirProto.encode single user (full)         106.09 K - 2.38x slower +5.47 μs
+ElixirProto.encode large struct (full)        105.63 K - 2.39x slower +5.51 μs
+Plain.encode single user (full)               101.40 K - 2.49x slower +5.91 μs
+Plain.encode large struct (sparse)             90.36 K - 2.80x slower +7.11 μs
+Plain.encode large struct (full)               72.84 K - 3.47x slower +9.77 μs
 
 Memory usage statistics:
 
 Name                                        Memory usage
-ElixirProto.encode sparse user                   1.79 KB
-Plain.encode sparse user                         0.26 KB - 0.14x memory usage -1.53125 KB
-ElixirProto.encode product                          2 KB - 1.12x memory usage +0.21 KB
-Plain.encode product                             0.26 KB - 0.14x memory usage -1.53125 KB
-ElixirProto.encode large struct (sparse)         9.25 KB - 5.17x memory usage +7.46 KB
-ElixirProto.encode single user (full)            1.75 KB - 0.98x memory usage -0.03906 KB
-Plain.encode single user (full)                  0.26 KB - 0.14x memory usage -1.53125 KB
-Plain.encode large struct (sparse)               0.26 KB - 0.14x memory usage -1.53125 KB
-ElixirProto.encode large struct (full)           9.37 KB - 5.24x memory usage +7.58 KB
-Plain.encode large struct (full)                 0.26 KB - 0.14x memory usage -1.53125 KB
+ElixirProto.encode sparse user                     840 B
+Plain.encode sparse user                           264 B - 0.31x memory usage -576 B
+ElixirProto.encode large struct (sparse)          1824 B - 2.17x memory usage +984 B
+ElixirProto.encode product                         800 B - 0.95x memory usage -40 B
+Plain.encode product                               264 B - 0.31x memory usage -576 B
+ElixirProto.encode single user (full)              800 B - 0.95x memory usage -40 B
+ElixirProto.encode large struct (full)            1696 B - 2.02x memory usage +856 B
+Plain.encode single user (full)                    264 B - 0.31x memory usage -576 B
+Plain.encode large struct (sparse)                 264 B - 0.31x memory usage -576 B
+Plain.encode large struct (full)                   264 B - 0.31x memory usage -576 B
 
 **All measurements for memory usage were the same**
 Operating System: macOS
@@ -100,30 +100,30 @@ Formatting results...
 *** 📦 COLLECTION ENCODING (Individual Structs) ***
 
 Name                                         ips        average  deviation         median         99th %
-ElixirProto 50 products                   2.36 K      424.19 μs     ±7.45%      420.13 μs      511.64 μs
-ElixirProto 100 sparse users              2.20 K      453.92 μs    ±31.13%      433.96 μs     1474.76 μs
-Plain 50 products                         2.17 K      460.42 μs     ±9.85%      453.13 μs      608.27 μs
-Plain 100 sparse users                    1.72 K      581.14 μs     ±7.22%      579.54 μs      650.54 μs
-ElixirProto 100 users (individual)        0.96 K     1043.02 μs     ±6.43%     1037.23 μs     1234.27 μs
-Plain 100 users (individual)              0.96 K     1043.26 μs     ±5.85%     1042.04 μs     1264.49 μs
+ElixirProto 50 products                   2.45 K      407.61 μs     ±7.65%      407.29 μs      451.89 μs
+ElixirProto 100 sparse users              2.38 K      420.57 μs     ±8.33%      418.38 μs      463.08 μs
+Plain 50 products                         2.17 K      459.90 μs     ±8.87%      453.50 μs      542.90 μs
+Plain 100 sparse users                    1.72 K      580.34 μs     ±7.32%      579.13 μs      641.28 μs
+ElixirProto 100 users (individual)        1.00 K     1000.62 μs     ±6.19%      997.42 μs     1068.88 μs
+Plain 100 users (individual)              0.97 K     1032.43 μs     ±7.35%     1031.50 μs     1197.59 μs
 
 Comparison: 
-ElixirProto 50 products                   2.36 K
-ElixirProto 100 sparse users              2.20 K - 1.07x slower +29.74 μs
-Plain 50 products                         2.17 K - 1.09x slower +36.24 μs
-Plain 100 sparse users                    1.72 K - 1.37x slower +156.96 μs
-ElixirProto 100 users (individual)        0.96 K - 2.46x slower +618.83 μs
-Plain 100 users (individual)              0.96 K - 2.46x slower +619.08 μs
+ElixirProto 50 products                   2.45 K
+ElixirProto 100 sparse users              2.38 K - 1.03x slower +12.96 μs
+Plain 50 products                         2.17 K - 1.13x slower +52.30 μs
+Plain 100 sparse users                    1.72 K - 1.42x slower +172.73 μs
+ElixirProto 100 users (individual)        1.00 K - 2.45x slower +593.01 μs
+Plain 100 users (individual)              0.97 K - 2.53x slower +624.82 μs
 
 Memory usage statistics:
 
 Name                                  Memory usage
-ElixirProto 50 products                  106.81 KB
-ElixirProto 100 sparse users             192.13 KB - 1.80x memory usage +85.31 KB
-Plain 50 products                         12.89 KB - 0.12x memory usage -93.92188 KB
-Plain 100 sparse users                    25.68 KB - 0.24x memory usage -81.13281 KB
-ElixirProto 100 users (individual)       188.55 KB - 1.77x memory usage +81.74 KB
-Plain 100 users (individual)              25.78 KB - 0.24x memory usage -81.03125 KB
+ElixirProto 50 products                   38.99 KB
+ElixirProto 100 sparse users              82.01 KB - 2.10x memory usage +43.02 KB
+Plain 50 products                         12.89 KB - 0.33x memory usage -26.10156 KB
+Plain 100 sparse users                    25.68 KB - 0.66x memory usage -13.31250 KB
+ElixirProto 100 users (individual)        78.04 KB - 2.00x memory usage +39.05 KB
+Plain 100 users (individual)              25.78 KB - 0.66x memory usage -13.21094 KB
 
 **All measurements for memory usage were the same**
 
@@ -132,8 +132,8 @@ Plain 100 users (individual)              25.78 KB - 0.24x memory usage -81.0312
 
 Single User (full data):
   📦 Uncompressed: 478 bytes
-  🗜️  Plain+gzip:   331 bytes (69.2% of original)
-  ⚡ ElixirProto:  289 bytes (60.5% of original)
+  🗜️  Plain+gzip:   330 bytes (69.0% of original)
+  ⚡ ElixirProto:  288 bytes (60.3% of original)
   ✅ Proto saves:   42 bytes (12.7% smaller)
 
 Single User (sparse - only id, name):
@@ -143,40 +143,40 @@ Single User (sparse - only id, name):
   ✅ Proto saves:   77 bytes (69.4% smaller)
 
 Single Product:
-  📦 Uncompressed: 344 bytes
-  🗜️  Plain+gzip:   249 bytes (72.4% of original)
-  ⚡ ElixirProto:  187 bytes (54.4% of original)
-  ✅ Proto saves:   62 bytes (24.9% smaller)
+  📦 Uncompressed: 341 bytes
+  🗜️  Plain+gzip:   250 bytes (73.3% of original)
+  ⚡ ElixirProto:  187 bytes (54.8% of original)
+  ✅ Proto saves:   63 bytes (25.2% smaller)
 
 Large Struct (all 50 fields):
   📦 Uncompressed: 1279 bytes
-  🗜️  Plain+gzip:   301 bytes (23.5% of original)
+  🗜️  Plain+gzip:   302 bytes (23.6% of original)
   ⚡ ElixirProto:  136 bytes (10.6% of original)
-  ✅ Proto saves:   165 bytes (54.8% smaller)
+  ✅ Proto saves:   166 bytes (55.0% smaller)
 
 Large Struct (only 10/50 fields):
   📦 Uncompressed: 879 bytes
-  🗜️  Plain+gzip:   225 bytes (25.6% of original)
+  🗜️  Plain+gzip:   223 bytes (25.4% of original)
   ⚡ ElixirProto:  64 bytes (7.3% of original)
-  ✅ Proto saves:   161 bytes (71.6% smaller)
+  ✅ Proto saves:   159 bytes (71.3% smaller)
 
 🗂️  COLLECTION SIZE ANALYSIS
 100 Users - Individual encoding:
-  ElixirProto total: 28875 bytes
-  Plain total:       33152 bytes
-  Savings:           4277 bytes
+  ElixirProto total: 28930 bytes
+  Plain total:       33210 bytes
+  Savings:           4280 bytes
 100 Users - Collection encoding (Plain only):
-  Plain collection:  1882 bytes
-  vs Individual sum: 33152 bytes
-  Collection saves:  31270 bytes
+  Plain collection:  1901 bytes
+  vs Individual sum: 33210 bytes
+  Collection saves:  31309 bytes
 
 📈 FIELD COUNT IMPACT ANALYSIS
 ================================================================================
-5 fields: Proto=45b, Plain=206b, Savings=161b (78.2%)
+5 fields: Proto=45b, Plain=208b, Savings=163b (78.4%)
 10 fields: Proto=62b, Plain=226b, Savings=164b (72.6%)
-20 fields: Proto=91b, Plain=257b, Savings=166b (64.6%)
+20 fields: Proto=91b, Plain=255b, Savings=164b (64.3%)
 30 fields: Proto=110b, Plain=278b, Savings=168b (60.4%)
-50 fields: Proto=135b, Plain=295b, Savings=160b (54.2%)
+50 fields: Proto=135b, Plain=300b, Savings=165b (55.0%)
 
 🎯 BENCHMARK SUMMARY
 ElixirProto shines when:
