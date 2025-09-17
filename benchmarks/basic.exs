@@ -2,20 +2,20 @@
 #
 # Run with: mix run benchmarks/basic.exs
 
-# Define test schemas
+# Define test schemas using PayloadConverter approach
 defmodule BenchUser do
-  use ElixirProto.Schema, name: "bench.user", index: 1
+  use ElixirProto.Schema, name: "bench.user"
   defschema [:id, :name, :email, :age, :active, :created_at, :metadata]
 end
 
 defmodule BenchProduct do
-  use ElixirProto.Schema, name: "bench.product", index: 2
+  use ElixirProto.Schema, name: "bench.product"
   defschema [:id, :name, :description, :price, :category, :in_stock, :tags, :specs]
 end
 
 # Large struct with many fields (to test field name overhead)
 defmodule LargeStruct do
-  use ElixirProto.Schema, name: "bench.large", index: 3
+  use ElixirProto.Schema, name: "bench.large"
 
   # 50 fields to simulate a real complex struct
   defschema [
@@ -30,6 +30,16 @@ defmodule LargeStruct do
     :field_41, :field_42, :field_43, :field_44, :field_45,
     :field_46, :field_47, :field_48, :field_49, :field_50
   ]
+end
+
+# BenchmarkConverter for all benchmark schemas
+defmodule BenchmarkConverter do
+  use ElixirProto.PayloadConverter,
+    mapping: [
+      {1, "bench.user"},
+      {2, "bench.product"},
+      {3, "bench.large"}
+    ]
 end
 
 defmodule PlainSerializer do
@@ -135,19 +145,19 @@ IO.puts("✅ Data prepared, starting benchmarks...")
 # Performance benchmarks - Individual struct encoding
 Benchee.run(
   %{
-    "ElixirProto.encode single user (full)" => fn -> ElixirProto.encode(user_full) end,
+    "ElixirProto.encode single user (full)" => fn -> BenchmarkConverter.encode(user_full) end,
     "Plain.encode single user (full)" => fn -> PlainSerializer.encode(user_full) end,
 
-    "ElixirProto.encode sparse user" => fn -> ElixirProto.encode(user_sparse) end,
+    "ElixirProto.encode sparse user" => fn -> BenchmarkConverter.encode(user_sparse) end,
     "Plain.encode sparse user" => fn -> PlainSerializer.encode(user_sparse) end,
 
-    "ElixirProto.encode product" => fn -> ElixirProto.encode(product) end,
+    "ElixirProto.encode product" => fn -> BenchmarkConverter.encode(product) end,
     "Plain.encode product" => fn -> PlainSerializer.encode(product) end,
 
-    "ElixirProto.encode large struct (full)" => fn -> ElixirProto.encode(large_full) end,
+    "ElixirProto.encode large struct (full)" => fn -> BenchmarkConverter.encode(large_full) end,
     "Plain.encode large struct (full)" => fn -> PlainSerializer.encode(large_full) end,
 
-    "ElixirProto.encode large struct (sparse)" => fn -> ElixirProto.encode(large_sparse) end,
+    "ElixirProto.encode large struct (sparse)" => fn -> BenchmarkConverter.encode(large_sparse) end,
     "Plain.encode large struct (sparse)" => fn -> PlainSerializer.encode(large_sparse) end
   },
   time: 3,
@@ -159,21 +169,21 @@ Benchee.run(
 Benchee.run(
   %{
     "ElixirProto 100 users (individual)" => fn ->
-      Enum.each(users_list, &ElixirProto.encode/1)
+      Enum.each(users_list, &BenchmarkConverter.encode/1)
     end,
     "Plain 100 users (individual)" => fn ->
       Enum.each(users_list, &PlainSerializer.encode/1)
     end,
 
     "ElixirProto 100 sparse users" => fn ->
-      Enum.each(users_sparse_list, &ElixirProto.encode/1)
+      Enum.each(users_sparse_list, &BenchmarkConverter.encode/1)
     end,
     "Plain 100 sparse users" => fn ->
       Enum.each(users_sparse_list, &PlainSerializer.encode/1)
     end,
 
     "ElixirProto 50 products" => fn ->
-      Enum.each(products_list, &ElixirProto.encode/1)
+      Enum.each(products_list, &BenchmarkConverter.encode/1)
     end,
     "Plain 50 products" => fn ->
       Enum.each(products_list, &PlainSerializer.encode/1)
@@ -190,7 +200,7 @@ IO.puts(String.duplicate("=", 80))
 
 defmodule SizeAnalyzer do
   def analyze(name, data) do
-    proto_encoded = ElixirProto.encode(data)
+    proto_encoded = BenchmarkConverter.encode(data)
     plain_encoded = PlainSerializer.encode(data)
     uncompressed = :erlang.term_to_binary(data)
 
@@ -227,7 +237,7 @@ SizeAnalyzer.analyze("Large Struct (only 10/50 fields)", large_sparse)
 # Collection size analysis (using plain serialization for collections)
 IO.puts("\n🗂️  COLLECTION SIZE ANALYSIS")
 users_list_proto_sizes = Enum.map(users_list, fn user ->
-  user |> ElixirProto.encode() |> byte_size()
+  user |> BenchmarkConverter.encode() |> byte_size()
 end)
 users_list_plain_sizes = Enum.map(users_list, fn user ->
   user |> PlainSerializer.encode() |> byte_size()
@@ -261,7 +271,7 @@ Enum.each(field_counts, fn count ->
 
   test_struct = struct(LargeStruct, fields)
 
-  proto_size = test_struct |> ElixirProto.encode() |> byte_size()
+  proto_size = test_struct |> BenchmarkConverter.encode() |> byte_size()
   plain_size = test_struct |> PlainSerializer.encode() |> byte_size()
 
   savings = plain_size - proto_size
