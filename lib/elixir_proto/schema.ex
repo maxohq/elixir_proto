@@ -1,20 +1,19 @@
 defmodule ElixirProto.Schema do
   @moduledoc """
-  Macro module for defining ElixirProto schemas.
+  Simplified schema definitions with name-only registration.
 
+  Schemas no longer specify indices - these are managed by PayloadConverter modules.
   This module provides the `defschema` macro that generates struct definitions
   and registers schemas in a global registry for serialization/deserialization.
   """
 
   defmacro __using__(opts) do
     name = Keyword.fetch!(opts, :name)
-    # Required explicit index
-    index = Keyword.fetch!(opts, :index)
+    # No longer require index parameter
 
     quote do
       import ElixirProto.Schema, only: [defschema: 1]
       @schema_name unquote(name)
-      @schema_index unquote(index)
     end
   end
 
@@ -24,7 +23,7 @@ defmodule ElixirProto.Schema do
   ## Example
 
       defmodule User do
-        use ElixirProto.Schema, name: "myapp.ctx.user", index: 1
+        use ElixirProto.Schema, name: "myapp.ctx.user"
 
         defschema [:id, :name, :email, :age, :active]
       end
@@ -49,11 +48,6 @@ defmodule ElixirProto.Schema do
         unquote(fields)
         |> Enum.with_index(1)
         |> Map.new(fn {field, index} -> {index, field} end)
-      end
-
-      # Add schema index function if explicit index provided
-      if @schema_index do
-        def __schema_index__(), do: @schema_index
       end
     end
   end

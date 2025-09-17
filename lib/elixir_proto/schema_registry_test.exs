@@ -1,15 +1,19 @@
 defmodule ElixirProto.SchemaRegistryTest do
   use ExUnit.Case, async: false
 
+  # Test schema modules for EXP002_2A_T3
+  defmodule TestUser do
+    use ElixirProto.Schema, name: "test.user"
+    defschema([:id, :name, :email, :age, :active])
+  end
+
+  defmodule TestPost do
+    use ElixirProto.Schema, name: "test.post"
+    defschema([:id, :title, :content, :author_id, :created_at])
+  end
+
   setup do
-    # Reset registry for clean tests but re-register test modules
-    ElixirProto.SchemaNameRegistry.reset!()
-
-    # Manually register test schemas since @after_compile already ran
-    ElixirProto.SchemaNameRegistry.force_register_index("test.user", 10)
-    ElixirProto.SchemaNameRegistry.force_register_index("test.post", 11)
-
-    # Re-register in the main schema registry too
+    # Set up registry with test schemas (no index management)
     registry = %{
       "test.user" => %{
         module: TestUser,
@@ -30,7 +34,7 @@ defmodule ElixirProto.SchemaRegistryTest do
     :ok
   end
 
-  describe "schema registry" do
+  describe "EXP002_2A_T3: Test SchemaRegistry no longer manages indices" do
     alias ElixirProto.SchemaRegistry
 
     test "registers schemas automatically" do
@@ -58,6 +62,36 @@ defmodule ElixirProto.SchemaRegistryTest do
       assert is_map(schemas)
       assert Map.has_key?(schemas, "test.user")
       assert Map.has_key?(schemas, "test.post")
+    end
+
+    test "does not manage schema indices anymore" do
+      # Verify that SchemaRegistry.register_schema does not require or handle indices
+      # The register_schema function should work without index management
+
+      # Mock module info for register_schema callback
+      module_info = %{module: TestUser}
+
+      # This should not raise any errors about missing indices
+      assert SchemaRegistry.register_schema(module_info, nil) == :ok
+
+      # Verify that no index-related functions exist on SchemaRegistry
+      refute function_exported?(ElixirProto.SchemaRegistry, :get_index, 1)
+      refute function_exported?(ElixirProto.SchemaRegistry, :get_name, 1)
+      refute function_exported?(ElixirProto.SchemaRegistry, :force_register_index, 2)
+    end
+
+    test "schema registration only stores name and field mappings" do
+      schema = SchemaRegistry.get_schema("test.user")
+
+      # Verify we still have the essential schema information
+      assert schema.module == TestUser
+      assert schema.fields == [:id, :name, :email, :age, :active]
+      assert schema.field_indices == %{id: 1, name: 2, email: 3, age: 4, active: 5}
+      assert schema.index_fields == %{1 => :id, 2 => :name, 3 => :email, 4 => :age, 5 => :active}
+
+      # But verify no global index information is stored
+      assert !Map.has_key?(schema, :schema_index)
+      assert !Map.has_key?(schema, :global_index)
     end
   end
 end

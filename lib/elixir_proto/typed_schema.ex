@@ -1,8 +1,8 @@
 defmodule ElixirProto.TypedSchema do
   @moduledoc """
-  TypedStruct-inspired macro for ElixirProto with explicit field indices.
-  Generates clean type specifications for Dialyzer integration.
+  TypedStruct-inspired macro for ElixirProto with name-only registration.
 
+  Indices are now managed by PayloadConverter modules, not individual schemas.
   This module provides a `typedschema` macro that combines the compact serialization
   benefits of ElixirProto.Schema with type specifications and explicit field indices
   for better developer experience and deterministic serialization order.
@@ -22,21 +22,14 @@ defmodule ElixirProto.TypedSchema do
 
   defmacro __using__(opts) when is_list(opts) do
     schema_name = Keyword.fetch!(opts, :name)
-    schema_index = Keyword.fetch!(opts, :index)
+    # No longer require index parameter
 
     quote do
-      # Register with schema registry
-      ElixirProto.SchemaNameRegistry.force_register_index(
-        unquote(schema_name),
-        unquote(schema_index)
-      )
-
       # Import typedschema macro
       import ElixirProto.TypedSchema, only: [typedschema: 1, typedschema: 2, field: 2, field: 3]
 
       # Store schema metadata
       @ts_schema_name unquote(schema_name)
-      @ts_schema_index unquote(schema_index)
 
       # Initialize accumulating attributes
       Enum.each(unquote(@typedschema_accumulating_attrs), fn attr ->
@@ -305,7 +298,6 @@ defmodule ElixirProto.TypedSchema do
     enforce_keys = Module.get_attribute(module, :ts_enforce_keys) |> Enum.reverse()
 
     schema_name = Module.get_attribute(module, :ts_schema_name)
-    schema_index = Module.get_attribute(module, :ts_schema_index)
 
     # Sort fields by index for consistent struct definition
     sorted_fields =
@@ -326,13 +318,9 @@ defmodule ElixirProto.TypedSchema do
 
       # Generate schema functions for ElixirProto compatibility
       def __schema__(:name), do: unquote(schema_name)
-      def __schema__(:index), do: unquote(schema_index)
       def __schema__(:fields), do: unquote(Enum.map(sorted_fields, &elem(&1, 0)))
       def __schema__(:field_indices), do: unquote(Macro.escape(field_indices))
       def __schema__(:index_fields), do: unquote(Macro.escape(index_fields))
-
-      # Add schema index function for registry compatibility
-      def __schema_index__(), do: unquote(schema_index)
 
       # Register with main schema registry for serialization using after_compile hook
       @after_compile {ElixirProto.SchemaRegistry, :register_schema}

@@ -2,9 +2,9 @@ defmodule ElixirProto.TypedSchemaTest do
   use ExUnit.Case, async: false
   import ExUnit.CaptureIO
 
-  # Test schemas defined within test module to avoid global pollution
+  # Test schemas defined within test module to avoid global pollution  
   defmodule BasicUser do
-    use ElixirProto.TypedSchema, name: "test.basic.user", index: 500
+    use ElixirProto.TypedSchema, name: "test.basic.user"
 
     typedschema do
       field(:id, pos_integer(), index: 1, enforce: true)
@@ -14,7 +14,7 @@ defmodule ElixirProto.TypedSchemaTest do
   end
 
   defmodule EnforcedByDefaultProduct do
-    use ElixirProto.TypedSchema, name: "test.enforced.product", index: 501
+    use ElixirProto.TypedSchema, name: "test.enforced.product"
 
     typedschema enforce: true do
       field(:sku, String.t(), index: 1)
@@ -25,7 +25,7 @@ defmodule ElixirProto.TypedSchemaTest do
   end
 
   defmodule WithDefaultsStruct do
-    use ElixirProto.TypedSchema, name: "test.defaults.struct", index: 502
+    use ElixirProto.TypedSchema, name: "test.defaults.struct"
 
     typedschema do
       field(:id, pos_integer(), index: 1, enforce: true)
@@ -37,7 +37,7 @@ defmodule ElixirProto.TypedSchemaTest do
 
   # Additional test modules
   defmodule ComplexTypesTest do
-    use ElixirProto.TypedSchema, name: "test.complex.types", index: 703
+    use ElixirProto.TypedSchema, name: "test.complex.types"
 
     typedschema do
       field(:union_field, String.t() | integer(), index: 1)
@@ -48,7 +48,7 @@ defmodule ElixirProto.TypedSchemaTest do
   end
 
   defmodule FunctionDefaultsTest do
-    use ElixirProto.TypedSchema, name: "test.function.defaults", index: 704
+    use ElixirProto.TypedSchema, name: "test.function.defaults"
 
     typedschema do
       field(:id, pos_integer(), index: 1, enforce: true)
@@ -58,7 +58,7 @@ defmodule ElixirProto.TypedSchemaTest do
   end
 
   defmodule NullableTest do
-    use ElixirProto.TypedSchema, name: "test.nullable", index: 800
+    use ElixirProto.TypedSchema, name: "test.nullable"
 
     typedschema do
       field(:required_field, String.t(), index: 1, enforce: true)
@@ -71,7 +71,7 @@ defmodule ElixirProto.TypedSchemaTest do
 
   # Test modules for Phase 2A
   defmodule OrderTest do
-    use ElixirProto.TypedSchema, name: "test.order", index: 901
+    use ElixirProto.TypedSchema, name: "test.order"
 
     typedschema do
       field(:third, String.t(), index: 3)
@@ -81,7 +81,7 @@ defmodule ElixirProto.TypedSchemaTest do
   end
 
   defmodule TypeNullabilityTest do
-    use ElixirProto.TypedSchema, name: "test.nullability", index: 902
+    use ElixirProto.TypedSchema, name: "test.nullability"
 
     typedschema do
       # Enforced - should stay String.t()
@@ -94,7 +94,7 @@ defmodule ElixirProto.TypedSchemaTest do
   end
 
   defmodule ComplexSchema do
-    use ElixirProto.TypedSchema, name: "test.complex", index: 903
+    use ElixirProto.TypedSchema, name: "test.complex"
 
     typedschema enforce: true do
       field(:gamma, String.t(), index: 30)
@@ -103,7 +103,7 @@ defmodule ElixirProto.TypedSchemaTest do
     end
   end
 
-  describe "EXP001_1A_T1: Test field parsing and schema registration" do
+  describe "EXP002_2A_T2: Test TypedSchema modules work without index parameter" do
     test "generates struct with correct field order" do
       user = %BasicUser{id: 1, name: "Alice"}
       assert user == %BasicUser{id: 1, name: "Alice", email: nil}
@@ -161,11 +161,9 @@ defmodule ElixirProto.TypedSchemaTest do
 
     test "generates correct schema metadata" do
       assert BasicUser.__schema__(:name) == "test.basic.user"
-      assert BasicUser.__schema__(:index) == 500
       assert BasicUser.__schema__(:fields) == [:id, :name, :email]
       assert BasicUser.__schema__(:field_indices) == %{id: 1, name: 2, email: 3}
       assert BasicUser.__schema__(:index_fields) == %{1 => :id, 2 => :name, 3 => :email}
-      assert BasicUser.__schema_index__() == 500
     end
   end
 
@@ -174,7 +172,7 @@ defmodule ElixirProto.TypedSchemaTest do
       capture_io(fn ->
         assert_raise CompileError, ~r/Missing required options for field :name/, fn ->
           defmodule InvalidNoIndex do
-            use ElixirProto.TypedSchema, name: "test.invalid.no.index", index: 600
+            use ElixirProto.TypedSchema, name: "test.invalid.no.index"
 
             typedschema do
               # Missing index - this should give a clear error message
@@ -189,7 +187,7 @@ defmodule ElixirProto.TypedSchemaTest do
       capture_io(fn ->
         assert_raise CompileError, ~r/Duplicate field index 1/, fn ->
           defmodule InvalidDuplicateIndex do
-            use ElixirProto.TypedSchema, name: "test.invalid.dup.index", index: 601
+            use ElixirProto.TypedSchema, name: "test.invalid.dup.index"
 
             typedschema do
               field(:name, String.t(), index: 1)
@@ -205,7 +203,7 @@ defmodule ElixirProto.TypedSchemaTest do
       capture_io(fn ->
         assert_raise CompileError, ~r/Invalid :index value -1/, fn ->
           defmodule InvalidNegativeIndex do
-            use ElixirProto.TypedSchema, name: "test.invalid.negative.index", index: 602
+            use ElixirProto.TypedSchema, name: "test.invalid.negative.index"
 
             typedschema do
               # Negative index - should give clear error message
@@ -220,7 +218,7 @@ defmodule ElixirProto.TypedSchemaTest do
       capture_io(fn ->
         assert_raise CompileError, ~r/Invalid :index value 0/, fn ->
           defmodule InvalidZeroIndex do
-            use ElixirProto.TypedSchema, name: "test.invalid.zero.index", index: 603
+            use ElixirProto.TypedSchema, name: "test.invalid.zero.index"
 
             typedschema do
               # Zero index - should give clear error message
@@ -235,7 +233,7 @@ defmodule ElixirProto.TypedSchemaTest do
       capture_io(fn ->
         assert_raise CompileError, ~r/Invalid :index option for field :name/, fn ->
           defmodule InvalidStringIndex do
-            use ElixirProto.TypedSchema, name: "test.invalid.string.index", index: 604
+            use ElixirProto.TypedSchema, name: "test.invalid.string.index"
 
             typedschema do
               # String index - should give clear error about type
@@ -252,7 +250,7 @@ defmodule ElixirProto.TypedSchemaTest do
       capture_io(fn ->
         assert_raise CompileError, ~r/Duplicate field name :name/, fn ->
           defmodule InvalidDuplicateName do
-            use ElixirProto.TypedSchema, name: "test.invalid.dup.name", index: 700
+            use ElixirProto.TypedSchema, name: "test.invalid.dup.name"
 
             typedschema do
               field(:name, String.t(), index: 1)
@@ -268,7 +266,7 @@ defmodule ElixirProto.TypedSchemaTest do
       capture_io(fn ->
         assert_raise CompileError, ~r/Invalid field name "name"/, fn ->
           defmodule InvalidFieldName do
-            use ElixirProto.TypedSchema, name: "test.invalid.field.name", index: 701
+            use ElixirProto.TypedSchema, name: "test.invalid.field.name"
 
             typedschema do
               # String field name - should give clear error with suggestion
@@ -284,7 +282,7 @@ defmodule ElixirProto.TypedSchemaTest do
         error =
           assert_raise CompileError, fn ->
             defmodule IndexConflictTest do
-              use ElixirProto.TypedSchema, name: "test.index.conflict", index: 702
+              use ElixirProto.TypedSchema, name: "test.index.conflict"
 
               typedschema do
                 field(:first_field, String.t(), index: 5)
@@ -406,11 +404,9 @@ defmodule ElixirProto.TypedSchemaTest do
   describe "EXP001_2A_T3: Test enforcement keys and __schema__ functions" do
     test "__schema__ functions provide complete metadata" do
       assert BasicUser.__schema__(:name) == "test.basic.user"
-      assert BasicUser.__schema__(:index) == 500
       assert BasicUser.__schema__(:fields) == [:id, :name, :email]
       assert BasicUser.__schema__(:field_indices) == %{id: 1, name: 2, email: 3}
       assert BasicUser.__schema__(:index_fields) == %{1 => :id, 2 => :name, 3 => :email}
-      assert BasicUser.__schema_index__() == 500
     end
 
     test "enforcement keys are correctly applied" do
@@ -452,23 +448,5 @@ defmodule ElixirProto.TypedSchemaTest do
       assert ComplexSchema.__schema__(:field_indices) == expected_field_indices
       assert ComplexSchema.__schema__(:index_fields) == expected_index_fields
     end
-  end
-
-  # Reset registry before each test to avoid conflicts
-  setup do
-    # Reset registry for clean tests
-    ElixirProto.SchemaNameRegistry.reset!()
-
-    # Re-register test schemas
-    ElixirProto.SchemaNameRegistry.force_register_index("test.basic.user", 500)
-    ElixirProto.SchemaNameRegistry.force_register_index("test.enforced.product", 501)
-    ElixirProto.SchemaNameRegistry.force_register_index("test.defaults.struct", 502)
-    ElixirProto.SchemaNameRegistry.force_register_index("test.complex.types", 703)
-    ElixirProto.SchemaNameRegistry.force_register_index("test.function.defaults", 704)
-    ElixirProto.SchemaNameRegistry.force_register_index("test.nullable", 800)
-    ElixirProto.SchemaNameRegistry.force_register_index("test.order", 901)
-    ElixirProto.SchemaNameRegistry.force_register_index("test.nullability", 902)
-    ElixirProto.SchemaNameRegistry.force_register_index("test.complex", 903)
-    :ok
   end
 end

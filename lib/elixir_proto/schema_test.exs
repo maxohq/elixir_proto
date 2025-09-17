@@ -1,14 +1,14 @@
 defmodule ElixirProto.Schema.Test do
   use ExUnit.Case, async: false
 
-  describe "defschema macro" do
+  describe "EXP002_2A_T1: Test Schema modules work without index parameter" do
     defmodule TestUser do
-      use ElixirProto.Schema, name: "test.user", index: 10
+      use ElixirProto.Schema, name: "test.user"
       defschema([:id, :name, :email, :age, :active])
     end
 
     defmodule TestPost do
-      use ElixirProto.Schema, name: "test.post", index: 11
+      use ElixirProto.Schema, name: "test.post"
       defschema([:id, :title, :content, :author_id, :created_at])
     end
 
