@@ -1,17 +1,28 @@
-# ElixirProto: Protobuf-Inspired Serialization for Elixir Events
+# ElixirProto: Context-Scoped Serialization for Elixir
 
 If you've ever worked with event sourcing or audit logs, you know the pain: thousands of events piling up in storage, each carrying redundant schema names and field information. A simple `OrderCreated` event becomes 80+ bytes when it could be 30.
 
 ElixirProto borrows Protobuf's core insight—use numeric schema IDs and positional fields instead of names. But it stays in Elixir-land, using the robust `:erlang.term_to_binary` format you already trust.
 
+The key innovation: context-scoped registries that eliminate global index collisions while keeping teams autonomous.
+
 ```elixir
 defmodule OrderCreated do
-  use ElixirProto.Schema, name: "orders.created", index: 1
+  use ElixirProto.Schema, name: "orders.created"
   defschema [:order_id, :customer_id, :total, :currency, :timestamp]
 end
 
+defmodule OrderEvents.PayloadConverter do
+  use ElixirProto.PayloadConverter,
+    mapping: [
+      {1, "orders.created"},
+      {2, "orders.updated"},
+      {3, "orders.cancelled"}
+    ]
+end
+
 event = %OrderCreated{order_id: "123", customer_id: "456", total: 99.99}
-encoded = ElixirProto.encode(event)  # ~40% smaller typically
+encoded = OrderEvents.PayloadConverter.encode(event)  # ~40% smaller typically
 ```
 
 ## When It Matters
@@ -25,9 +36,11 @@ Like Protobuf, you get schema evolution for free—append new fields and old dat
 
 ## The Trade-offs
 
-**More setup**: You manage schema indices manually (like Protobuf field numbers). Pick wrong and you're stuck with them.
+**More setup**: You manage schema indices per context (like Protobuf field numbers). Each team maintains their own PayloadConverter mapping.
 
 **Another dependency**: Sometimes `Jason.encode!` or plain `:erlang.term_to_binary` is simpler and good enough.
+
+**Context discipline**: Teams need to coordinate within their domain contexts, though isolation prevents cross-team conflicts.
 
 **Overkill for small volumes**: If you're not storing thousands of events daily and watching storage costs climb, the built-ins work fine.
 
@@ -35,4 +48,6 @@ Like Protobuf, you get schema evolution for free—append new fields and old dat
 
 If you're storing thousands of events daily and watching storage costs climb, probably yes. If you're building a simple CRUD app, probably no.
 
-It's Protobuf's space efficiency without leaving Elixir's type system. Whether that trade-off makes sense depends on how much you're paying for those extra bytes.
+The context-scoped approach shines in larger systems where multiple teams work on different domains. Each team gets Protobuf's space efficiency without stepping on each other's schema indices.
+
+It's Protobuf's space efficiency without leaving Elixir's type system, plus team autonomy without coordination overhead. Whether that trade-off makes sense depends on how much you're paying for those extra bytes and coordination meetings.
