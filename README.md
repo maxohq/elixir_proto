@@ -4,7 +4,7 @@
 [![Hex.pm](https://img.shields.io/hexpm/v/elixir_proto.svg?style=flat)](https://hex.pm/packages/elixir_proto)
 [![Hex Docs](https://img.shields.io/badge/hex-docs-lightgreen.svg?style=flat)](https://hexdocs.pm/elixir_proto/)
 
-A compact serialization library for Elixir using context-scoped schema registries with centralized index mapping. Eliminates global index collisions while maintaining wire format compatibility and enabling domain-driven schema organization.
+A compact serialization library for Elixir using context-scoped schema registries. Eliminates global index collisions while maintaining wire format compatibility.
 
 Here is a short pitch: [PITCH](PITCH.md)
 
@@ -74,22 +74,22 @@ end
 ```
 
 ## How It Works
-- **Context-Scoped Registries**: Each PayloadConverter manages its own index namespace
-- **Centralized Index Mapping**: All indices for a context visible in single location
-- **Index Collision Elimination**: Same indices can be safely used across different contexts
-- **Wire Format Preservation**: Context information is compile-time only, not stored in binary
-- **Fixed Tuples**: Eliminates per-field overhead (1-3 bytes vs 20+ bytes for module names)
-- **Space Savings**: 34-56% smaller than standard serialization
+- Context-Scoped Registries: Each PayloadConverter manages its own index namespace
+- Centralized Index Mapping: All indices for a context visible in single location
+- Index Collision Elimination: Same indices can be safely used across different contexts
+- Wire Format Preservation: Context information is compile-time only, not stored in binary
+- Fixed Tuples: Eliminates per-field overhead (1-3 bytes vs 20+ bytes for module names)
+- Space Savings: 34-56% smaller than standard serialization
 
 ## Key Features
-- **🎯 Context Isolation**: No more global index collisions between teams/domains
-- **📋 Centralized Management**: All context indices managed in single PayloadConverter mapping
-- **🔄 Wire Compatibility**: Maintains `{schema_index, payload_tuple}` format
-- **🏗️ Domain Organization**: Organize schemas by business context following DDD principles
-- **Two Schema Approaches**: Simple Schema or TypedSchema with compile-time type safety
-- **🔗 Nested Structs**: Automatic deep serialization with context awareness
-- **📈 Schema Evolution**: Safe field additions and renaming within contexts
-- **🗜️ Built-in Compression**: Automatic zlib compression for optimal storage
+- Context Isolation: No more global index collisions between teams/domains
+- Centralized Management: All context indices managed in single PayloadConverter mapping
+- Wire Compatibility: Maintains `{schema_index, payload_tuple}` format
+- Domain Organization: Organize schemas by business context following DDD principles
+- Two Schema Approaches: Simple Schema or TypedSchema with compile-time type safety
+- Nested Structs: Automatic deep serialization with context awareness
+- Schema Evolution: Safe field additions and renaming within contexts
+- Built-in Compression: Automatic zlib compression for optimal storage
 
 ## Performance
 | Struct Type | Standard | ElixirProto | Savings |
@@ -101,19 +101,19 @@ end
 
 ### Context-Safe Operations
 ```elixir
-# ✅ Safe operations within a PayloadConverter context:
+# Safe operations within a PayloadConverter context:
 - Add new schemas with new indices to mapping
 - Add new fields to existing schemas (with new field indices)  
 - Rename fields (keep same field index)
 - Reorder field definitions in schemas
 - Remove unused schemas from mapping (if no legacy data)
 
-# ❌ Never change within a context:
+# Never change within a context:
 - Existing schema indices in PayloadConverter mapping
 - Existing field indices within schemas
 - Schema names once in production
 
-# ✅ Context isolation allows:
+# Context isolation allows:
 - Same schema indices across different PayloadConverters
 - Independent evolution of different domain contexts
 - Team autonomy without coordination overhead
@@ -134,10 +134,10 @@ end
 defmodule MyApp.Users.PayloadConverter do
   use ElixirProto.PayloadConverter,
     mapping: [
-      {1, "myapp.user"},           # ✅ Keep existing
-      {2, "myapp.user.profile"},   # ✅ Keep existing  
-      {3, "myapp.user.session"},   # ✅ Add new schema
-      {4, "myapp.user.preferences"} # ✅ Add new schema
+      {1, "myapp.user"},             # Keep existing
+      {2, "myapp.user.profile"},     # Keep existing  
+      {3, "myapp.user.session"},     # Add new schema
+      {4, "myapp.user.preferences"}  # Add new schema
     ]
 end
 ```
