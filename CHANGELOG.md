@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.1.7] - 2025-01-18
+
+### Breaking Changes
+- Replaced global schema index management with context-scoped PayloadConverter approach
+- Removed index parameters from Schema and TypedSchema (schemas now use name only)
+- Eliminated ElixirProto.encode/decode global functions
+- Deleted SchemaNameRegistry module (global index management removed)
+
+### Added
+- PayloadConverter modules with context-scoped schema registries
+- Centralized index mapping in single location per context
+- Context isolation preventing index collisions between domains
+- Cross-context compatibility testing and examples
+
+### Changed
+- Schema definitions simplified to name-only approach
+- Wire format preserved for backward compatibility
+- All tests migrated to PayloadConverter approach
+- Updated benchmarks and documentation
+
 ## [0.1.6] - 2025-09-14
 
 ### Added

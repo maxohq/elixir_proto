@@ -1,7 +1,7 @@
 defmodule ElixirProto.MixProject do
   use Mix.Project
 
-  @version "0.1.6"
+  @version "0.1.7"
   @source_url "https://github.com/maxohq/elixir_proto"
 
   def project do
@@ -47,8 +47,8 @@ defmodule ElixirProto.MixProject do
 
   defp description do
     """
-    A compact serialization library for Elixir that uses schema indices and fixed tuples
-    for space-efficient binary serialization with schema evolution support. Inspired by Protobuf.
+    A compact serialization library for Elixir using context-scoped schema registries.
+    Eliminates global index collisions while maintaining wire format compatibility.
     """
   end
 
